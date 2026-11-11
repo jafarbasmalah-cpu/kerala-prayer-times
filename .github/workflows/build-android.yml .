@@ -1,0 +1,30 @@
+name: Build Android APK
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install ffmpeg (prepares adhan sounds)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: npm install
+      - run: npx cap add android
+      - name: App icon & splash
+        run: npx @capacitor/assets generate --android --iconBackgroundColor '#0B5D4B' --splashBackgroundColor '#0B5D4B' --splashBackgroundColorDark '#06261F'
+      - run: npm run setup:native
+      - run: npx cap sync android
+      - name: Build APK
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KeralaPrayerTimes-Android
+          path: android/app/build/outputs/apk/debug/*.apk
