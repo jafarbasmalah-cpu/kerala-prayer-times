@@ -26,16 +26,14 @@
       { k: "maghrib", en: "Maghrib", ml: "മഗ്‌രിബ്", ar: "المغرب" },
       { k: "isha", en: "Isha", ml: "ഇശാ", ar: "العشاء" }
     ],
-    /* Adhan sounds. Place recordings in resources/adhan-source/<id>.mp3 and run `npm run setup:native`. */
+    /* Adhan sounds. Freely licensed recordings are downloaded at build time (scripts/get-adhans.mjs).
+       Any other MP3 you put in resources/adhan-source/ is added to this list automatically (www/js/adhans-extra.js). */
     ADHANS: [
-      { id: "makkah", en: "Makkah – Masjid al-Haram", ml: "മക്ക – മസ്ജിദുൽ ഹറാം" },
-      { id: "madinah", en: "Madinah – Masjid an-Nabawi", ml: "മദീന – മസ്ജിദുന്നബവി" },
-      { id: "alaqsa", en: "Al-Aqsa – Jerusalem", ml: "മസ്ജിദുൽ അഖ്സ" },
-      { id: "mishary", en: "Mishary Rashid Alafasy", ml: "മിശാരി റാശിദ് അൽഅഫാസി" },
-      { id: "egypt", en: "Egypt – Classic", ml: "ഈജിപ്ത് – ക്ലാസിക്" },
-      { id: "kerala", en: "Kerala masjid", ml: "കേരള പള്ളി" },
-      { id: "fajr_makkah", en: "Fajr adhan – Makkah", ml: "സുബ്ഹ് ബാങ്ക് – മക്ക", fajr: true },
-      { id: "fajr_madinah", en: "Fajr adhan – Madinah", ml: "സുബ്ഹ് ബാങ്ക് – മദീന", fajr: true },
+      { id: "makkah", en: "Makkah – Masjid al-Haram", ml: "മക്ക – മസ്ജിദുൽ ഹറാം", credit: "Seyfula Islam · CC BY 3.0", src: "Adhan, Great Mosque of Mecca - Jan 21, 2013.webm" },
+      { id: "madinah", en: "Madinah – Masjid an-Nabawi", ml: "മദീന – മസ്ജിദുന്നബവി", credit: "ejaz215 · CC BY 3.0", src: "33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg" },
+      { id: "azeez", en: "Aaqib Azeez – calm adhan", ml: "അഖിബ് അസീസ് – ശാന്തമായ ബാങ്ക്", credit: "Atcovi · CC BY-SA 4.0", src: "The Adhan - Muslim Call to Prayer - Aaqib Azeez.mp3" },
+      { id: "short", en: "Short adhan (27 seconds)", ml: "ചെറിയ ബാങ്ക് (27 സെക്കൻഡ്)", credit: "Jarih · CC BY-SA 3.0", src: "Adhan wiki.oga" },
+      { id: "fajr_malmo", en: "Fajr adhan – Besim Azemi", ml: "സുബ്ഹ് ബാങ്ക് – ബസീം അസീമി", fajr: true, credit: "Islamic Center Malmö · CC BY 3.0", src: "Eid al-Fitr Fajr azan at Malmö Mosque - 19 August 2012.webm" },
       { id: "chime", en: "Soft chime (built-in)", ml: "മൃദുവായ മണിനാദം (ഇൻ-ബിൽറ്റ്)", builtin: true },
       { id: "default", en: "Phone default sound", ml: "ഫോണിന്റെ സാധാരണ ശബ്ദം", system: true }
     ],

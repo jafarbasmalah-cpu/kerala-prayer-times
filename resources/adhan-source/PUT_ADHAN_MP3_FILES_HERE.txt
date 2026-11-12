@@ -1,16 +1,7 @@
-Put your adhan recordings in this folder, named exactly like this (MP3 recommended):
+The build downloads 5 freely licensed adhans automatically (Makkah, Madinah, Aaqib Azeez, Short adhan, Fajr – Besim Azemi).
 
-  makkah.mp3         Makkah – Masjid al-Haram
-  madinah.mp3        Madinah – Masjid an-Nabawi
-  alaqsa.mp3         Al-Aqsa – Jerusalem
-  mishary.mp3        Mishary Rashid Alafasy
-  egypt.mp3          Egypt – Classic
-  kerala.mp3         Kerala masjid
-  fajr_makkah.mp3    Fajr adhan – Makkah   (with "As-salatu khairum minan-nawm")
-  fajr_madinah.mp3   Fajr adhan – Madinah
-
-Then run:  npm run setup:native   and   npx cap sync
-
-Any sound you don't add shows "Not installed" in the app and falls back to the built-in chime.
-Only use recordings you have permission to use (for example, recorded at your own masjid,
-or ones whose licence allows use in an app).
+To add your own adhan, put an MP3 here that you have permission to use, for example:
+  mishary.mp3      -> appears in the app as "Mishary"
+  fajr_kerala.mp3  -> appears as a Fajr adhan (name starts with "fajr")
+  makkah.mp3       -> replaces the built-in Makkah recording
+Then upload to GitHub; the next build includes it.
