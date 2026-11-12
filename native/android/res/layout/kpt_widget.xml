@@ -8,7 +8,7 @@
     android:padding="14dp">
 
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-        <TextView android:id="@+id/kpt_place" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Kerala Prayer Times" android:textColor="#D9FFFFFF" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/kpt_place" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Basmalah" android:textColor="#D9FFFFFF" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" />
         <TextView android:id="@+id/kpt_date" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#BFDBFF" android:textSize="12sp" android:maxLines="1" />
     </LinearLayout>
 

@@ -1,12 +1,14 @@
-/* Kerala Prayer Times – main application (Android & iOS via Capacitor; also runs in a browser). */
+/* Basmalah – main application (Android & iOS via Capacitor; also runs in a browser). */
 (function () {
   "use strict";
   var D = window.KPT_DATA, DIST = D.DISTRICTS, PR = D.PRAYERS, ADH = D.ADHANS, DK = window.KPT_ADHKAR;
-  var Cap = window.Capacitor;
+  var NB = window.KPT_NATIVE || {};   // Capacitor + plugins bundled at build time (www/js/native.js)
+  var Cap = NB.Capacitor || window.Capacitor;
   var isNative = !!(Cap && Cap.isNativePlatform && Cap.isNativePlatform());
   var platform = Cap && Cap.getPlatform ? Cap.getPlatform() : "web";
   function plugin(n) {
     if (!isNative) return null;
+    if (NB[n]) return NB[n];
     try { return (Cap.Plugins && Cap.Plugins[n]) || (Cap.registerPlugin ? Cap.registerPlugin(n) : null); } catch (e) { return null; }
   }
   var LN = plugin("LocalNotifications"), GEO = plugin("Geolocation"), PREF = plugin("Preferences"),
@@ -22,7 +24,7 @@
     adj: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 }, hijriAdj: 0, fmt: "12", theme: "auto",
     sound: "makkah", fajrSound: "fajr_malmo",
     modes: { fajr: "adhan", sunrise: "off", dhuhr: "adhan", asr: "adhan", maghrib: "adhan", isha: "adhan" }, pre: 0,
-    ramadan: "auto", suhoor: 45, jumuah: 60, tb: { i: 0, target: 33, count: 0, rounds: 0, total: 0 }, setupSeen: false, ps: {}, bg: "bluehour"
+    ramadan: "auto", suhoor: 45, jumuah: 60, tb: { i: 0, target: 33, count: 0, rounds: 0, total: 0 }, setupSeen: false, ps: {}, bg: "pattern"
   };
   var S = null;
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
@@ -41,6 +43,8 @@
     var o = {}; try { o = JSON.parse(raw) || {}; } catch (e) { o = {}; }
     S = merge(DEF, o);
     if (S.district === null || S.district === undefined) { S.district = 9; UI.firstRun = true; }
+    if (S.bgv !== 2) { S.bg = "light"; S.bgv = 2; }
+    if (["light", "pattern", "night"].indexOf(S.bg) < 0) S.bg = "light";
     var ids = ADH.map(function (a) { return a.id; });
     if (ids.indexOf(S.sound) < 0) S.sound = DEF.sound;
     if (ids.indexOf(S.fajrSound) < 0) S.fajrSound = DEF.fajrSound;
@@ -51,6 +55,8 @@
     if (q.has("theme")) S.theme = q.get("theme");
     if (q.has("tab")) UI.tab = q.get("tab");
     if (q.has("mode")) UI.mode = q.get("mode");
+    if (q.has("surah")) { UI.surah = +q.get("surah"); UI.tab = "surah"; }
+    if (q.has("sheet")) UI.sheet = q.get("sheet");
     if (q.has("ramadan")) S.ramadan = q.get("ramadan");
     if (q.has("noanim")) document.documentElement.classList.add("noanim");
   }
@@ -68,7 +74,7 @@
   function $(s) { return document.querySelector(s); }
   function pad(n) { return (n < 10 ? "0" : "") + n; }
   function place() {
-    if (S.district === -1 && S.gps) return { en: t("myLocation"), ml: D.T.ml.myLocation, lat: S.gps[0], lng: S.gps[1], gps: true };
+    if (S.district === -1 && S.gps) return { en: S.gpsName || t("myLocation"), ml: S.gpsName || D.T.ml.myLocation, lat: S.gps[0], lng: S.gps[1], gps: true };
     return DIST[S.district] || DIST[9];
   }
   function tz() { return place().gps ? -new Date().getTimezoneOffset() / 60 : 5.5; }
@@ -159,6 +165,7 @@
     widget: sv('<rect x="3" y="3" width="18" height="11" rx="3"/><rect x="3" y="17" width="8" height="4" rx="1.5"/><rect x="13" y="17" width="8" height="4" rx="1.5"/>'),
     lock: sv('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>'),
     reset: sv('<path d="M3 12a9 9 0 109-9 9 9 0 00-6.4 2.6L3 8"/><path d="M3 3v5h5"/>'),
+    quran: sv('<path d="M12 6.5C10 4.8 7 4 3 4v14c4 0 7 .8 9 2.5 2-1.7 5-2.5 9-2.5V4c-4 0-7 .8-9 2.5z"/><path d="M12 6.5V20"/>'),
     mosque: sv('<path d="M12 3c-3 2.5-6 4-6 8h12c0-4-3-5.5-6-8z"/><path d="M4 21V11M20 21V11M3 21h18M9 21v-4a3 3 0 016 0v4"/><path d="M12 1v2"/>')
   };
 
@@ -169,14 +176,17 @@
     applyTheme();
     if (S.district === null || S.district === undefined) { root.innerHTML = onboarding(); return; }
     var body = { home: homeScreen, times: timesScreen, qibla: qiblaScreen, adhkar: adhkarScreen, settings: settingsScreen,
-      tasbih: tasbihScreen, ramadan: ramadanScreen, setup: setupScreen }[UI.tab] || homeScreen;
-    root.innerHTML = body() + tabbar() + (UI.sheet ? sheetHtml() : "");
+      tasbih: tasbihScreen, ramadan: ramadanScreen, setup: setupScreen, quran: quranScreen, surah: surahScreen, dates: datesScreen }[UI.tab] || homeScreen;
+    var home = UI.tab === "home", bg = S.bg, glassy = home && bg !== "light";
+    root.className = glassy ? "glassy" : (home ? "homelight" : "");
+    root.innerHTML = (glassy ? '<div class="homebg bg-' + bg + '"></div>' : "") + body() + tabbar() + (UI.sheet ? sheetHtml() : "");
     if (UI.tab === "qibla") drawCompass(); else stopCompass();
+    if (UI.tab === "surah") { if (!$("#qtext .ay")) fillSurah(); } else if (QA.audio) qStop();
   }
   function tabbar() {
-    var tabs = ["home", "times", "qibla", "adhkar", "settings"];
+    var tabs = ["home", "times", "quran", "qibla", "settings"];
     return '<nav class="tabbar"><div class="in">' + tabs.map(function (k) {
-      var par = { tasbih: "adhkar", ramadan: "times", setup: "settings" }[UI.tab] || UI.tab;
+      var par = { tasbih: "home", adhkar: "home", ramadan: "times", setup: "settings", surah: "quran", dates: "times" }[UI.tab] || UI.tab;
       return '<button class="tab' + (par === k ? " on" : "") + '" data-act="tab" data-v="' + k + '"><span class="tbg">' + I[k] + "</span>" + t(k) + "</button>";
     }).join("") + "</div></nav>";
   }
@@ -184,7 +194,7 @@
     var P = place();
     return '<header class="hdr' + (title ? " small" : "") + '"><div class="pattern"></div><div class="hrow">' +
       (back ? '<button class="iconbtn" data-act="tab" data-v="' + back + '" aria-label="' + t("back") + '">' + I.left + "</button>" : "") +
-      '<button class="chip" data-act="openDistrict">' + I.pin + "<span>" + L(P) + "</span>" + I.down + "</button>" +
+      '<button class="chip" data-act="openDistrict">' + I.pin + "<span>" + (UI.locating ? t("locating") : L(P)) + "</span>" + I.down + "</button>" +
       (title ? (back ? '<span style="width:40px"></span>' : "") : '<button class="iconbtn" data-act="tab" data-v="settings" aria-label="Settings">' + I.settings + "</button>") + "</div>" +
       (title ? '<div class="title">' + title + "</div>" : "") + "</header>";
   }
@@ -214,9 +224,9 @@
     return PR.map(function (p) {
       var cls = "prow" + (p.sun ? " sun" : "") + (isToday && info.cur === p.k ? " cur" : "") + (isToday && info.now.secs >= tt[p.k] * 60 && info.cur !== p.k ? " past" : "");
       var mode = S.modes[p.k], bellIc = mode === "adhan" ? I.speaker : mode === "notify" ? I.bell : I.bellOff;
-      return '<div class="' + cls + '"><div class="pi">' + I[p.k] + '</div><div class="pn"><b>' + L(p) +
-        (isToday && info.cur === p.k ? '<span class="badge">' + t("now") + "</span>" : "") + "</b><small>" + (p.sun ? t("sunriseNote") : (S.lang === "ml" ? p.en : p.ml) + " · " + p.ar) + "</small></div>" +
-        '<div class="pt">' + fmtT(tt[p.k]) + "</div>" +
+      return '<div class="' + cls + '"' + (p.sun ? "" : ' data-act="openPrayer" data-v="' + p.k + '"') + '><div class="pi">' + I[p.k] + '</div><div class="pn"><b>' + L(p) +
+        (isToday && info.cur === p.k ? '<span class="badge">' + t("now") + "</span>" : "") + "</b><small>" + (S.lang === "ml" ? p.en : p.ml) + " · " + p.ar + "</small></div>" +
+        '<div class="pt">' + fmtT(tt[p.k]) + "</div>" + (p.sun ? '<span class="go"></span>' : '<span class="go">' + I.right + "</span>") +
         '<button class="bell' + (mode !== "off" ? " on" : "") + '" data-act="cycleMode" data-v="' + p.k + '" aria-label="alert">' + bellIc + "</button></div>";
     }).join("");
   }
@@ -231,28 +241,40 @@
   }
   var MOSQUE = '<svg class="mosque" viewBox="0 0 400 84" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><path d="M0 84V72H26V30L31 14L36 30V72H74V62A20 20 0 0 1 114 62V72H150V60A50 50 0 0 1 250 60V72H286V62A20 20 0 0 1 326 62V72H364V30L369 14L374 30V72H400V84Z"/><rect x="198" y="0" width="4" height="12" rx="2"/></svg>';
   function homeScreen() {
-    var info = nextInfo(), P = place(), ph = skyPhase(info), tt = info.tt, now = info.now.secs / 60;
+    var info = nextInfo(), tt = info.tt, now = info.now.secs / 60;
     var dots = PR.map(function (p) {
       return '<span class="dot' + (p.k === info.next && !info.tomorrow ? " next" : "") + (now >= tt[p.k] ? " done" : "") + '" style="left:' + (tt[p.k] / 14.4).toFixed(2) + '%"></span>';
     }).join("");
-    var img = S.bg === "image" || S.bg === "kerala" || S.bg === "sunrise" || S.bg === "bluehour";
-    var h = '<div class="screen home2"><header class="hero2 sky-' + ph + (img ? " img bg-" + S.bg : "") + '"><div class="stars"></div>' + (img ? "" : MOSQUE) +
-      '<div class="hrow">' + districtSelect() +
+    var h = '<div class="screen home3"><header class="hero3">' +
+      '<div class="hrow">' + locChip() +
       '<button class="iconbtn" data-act="tab" data-v="settings" aria-label="Settings">' + I.settings + "</button></div>" +
-      (UI.firstRun ? '<div class="dhint">' + t("pickHint") + "</div>" : "") +
-      '<div class="greet">' + t("welcome") + '</div><div class="dates">' + gDate(info.today) + '</div><div class="hijri">' + hDate(info.today) + "</div>" +
-      '<div class="nxt"><div><div class="nlbl">' + t("next") + '</div><div class="nname" id="nxName">' + pName(info.next) + '</div><div class="nat" id="nxAt">' + fmtT(info.at) + (info.tomorrow ? " · " + t("tomorrow") : "") + "</div></div>" +
-      '<div class="cdbox"><div class="cd" id="cd">' + cdText(info.left) + "</div><small>" + t("remaining") + "</small></div></div>" +
+      (UI.firstRun && !UI.locating ? '<div class="dhint">' + t("locHint") + "</div>" : "") +
+      '<div class="salam">' + t("salam") + '</div><div class="dates"><span>' + gDate(info.today) + '</span><span class="hj">' + hDate(info.today) + "</span></div>" +
+      '<div class="nxt glass"><div><div class="nlbl">' + t("next") + '</div><div class="nname" id="nxName">' + pName(info.next) + '</div><div class="nat" id="nxAt">' + fmtT(info.at) + (info.tomorrow ? " · " + t("tomorrow") : "") + "</div></div>" +
+      '<div class="cdbox"><div class="cd" id="cd">' + cdText(info.left) + "</div><small>" + t("remaining") + "</small></div>" +
       '<div class="daybar"><div class="fill" id="dayfill" style="width:' + (now / 14.4).toFixed(2) + '%"></div>' + dots +
-      '<span class="me" id="dayme" style="left:' + (now / 14.4).toFixed(2) + '%"></span></div></header>';
-    h += '<div class="card over">' + prayerRows(info.today, tt, info) +
-      '<button class="adhanbar" data-act="soundSheet" data-v="sound"><span class="ai">' + I.speaker + '</span><span class="at"><small>' + t("adhanSound") + "</small><b>" + L(adhan(S.sound)) + "</b></span><span class=\"chg\">" + t("change") + "</span></button></div>" +
+      '<span class="me" id="dayme" style="left:' + (now / 14.4).toFixed(2) + '%"></span></div></div></header>';
+    h += '<div class="card glass times3">' + prayerRows(info.today, tt, info) +
+      '<button class="adhanbar" data-act="soundSheet" data-v="sound"><span class="ai">' + I.speaker + '</span><span class="at"><small>' + t("adhanSound") + "</small><b>" + L(adhan(S.sound)) + "</b></span><span class=\"chg\">" + t("change") + "</span></button>" + adhanDuaPills() + "</div>" +
       ramadanCard(info) + banners();
-    var Q = [["goTomorrow", "", I.times, t("tomorrow")], ["tab", "qibla", I.qibla, t("qibla")], ["tab", "adhkar", I.adhkar, t("adhkar")],
-      ["tab", "tasbih", I.tasbih, t("tasbih")], ["goHijri", "", I.cal, t("calShort")], ["tab", "ramadan", I.moon, t("ramadan")]];
-    h += '<div class="quick">' + Q.map(function (q) { return '<button data-act="' + q[0] + '"' + (q[1] ? ' data-v="' + q[1] + '"' : "") + '><span class="qi">' + q[2] + "</span>" + q[3] + "</button>"; }).join("") + "</div>";
-    h += homeCounter(info) + duaOfDay(info) + upcomingHtml(2);
+    var Q = [["tab", "qibla", I.qibla, t("qibla")], ["openPrayer", info.cur || "fajr", I.adhkar, t("adhkar")],
+      ["tab", "tasbih", I.tasbih, t("tasbih")], ["tab", "quran", I.quran, t("quran")], ["tab", "ramadan", I.moon, t("ramadan")]];
+    h += '<div class="quick q5">' + Q.map(function (q) { return '<button data-act="' + q[0] + '"' + (q[1] ? ' data-v="' + q[1] + '"' : "") + '><span class="qi">' + q[2] + "</span>" + q[3] + "</button>"; }).join("") + "</div>";
+    var hp = info.cur || "fajr";
+    h += '<div class="sec"><h2>' + t("hcTitle") + " · " + pName(hp) + '</h2><button class="link" data-act="openPrayer" data-v="' + hp + '">' + t("adhkar") + "</button></div>" +
+      '<div class="hc glass" id="hc">' + hcInner(hcState(hp), hp) + "</div>";
+    h += dailyHome() + myDatesHome() + streakCard(false) + duaOfDay(info) + upcomingHtml(2);
     return h + "</div>";
+  }
+  function locChip() {
+    var name = UI.locating ? t("locating") : S.district === -1 ? (S.gpsName || t("myLocation")) : L(place());
+    return '<button class="locchip" data-act="openDistrict">' + I.pin + "<span>" + name + '</span><span class="rf' + (UI.locating ? " spin2" : "") + '">' + (UI.locating ? I.reset : I.down) + "</span></button>";
+  }
+  function adhanDuaPills() {
+    var A = (window.KPT_DUAS || {}).adhan || []; if (!A.length) return "";
+    return '<div class="adpills">' + A.map(function (x, i) {
+      return '<button data-act="aDua" data-v="' + i + '">' + I.adhkar + "<span>" + L(x.ts || x.t) + "</span></button>";
+    }).join("") + "</div>";
   }
   function districtSelect() {
     var cur = S.district;
@@ -262,35 +284,34 @@
       "</select>" + I.down + "</label>";
   }
   function duaOfDay(info) {
-    var list = DK.filter(function (x) { return x.tr && x.ar.length < 260; });
+    var list = DK.filter(function (x) { return x.ar.length < 260; });
     var x = list[Math.floor(Date.UTC(info.today.y, info.today.m - 1, info.today.d) / 86400000) % list.length];
-    return '<div class="sec"><h2>' + t("duaDay") + '</h2></div><div class="duaday"><div class="ar">' + x.ar + '</div><div class="tr">' + x.tr + '</div><div class="en">' + (S.lang === "ml" && x.ml ? x.ml : x.en) + '</div><div class="src">' + x.src + "</div></div>";
+    return '<div class="sec"><h2>' + t("duaDay") + '</h2></div><div class="duaday glass"><div class="ar">' + x.ar + "</div></div>";
   }
+
 
   /* ---- After-prayer adhkar counter on the home page: 33 SubhanAllah, 33 Alhamdulillah, 33 Allahu Akbar, then La ilaha illallah ---- */
   var HC = [{ d: 0, n: 33 }, { d: 1, n: 33 }, { d: 2, n: 33 }, { d: 3, n: 1, long: true }];
-  function hcKey(info) { return iso(info.today) + ":" + (info.cur || "x"); }
-  function hcState(info) {
-    var k = hcKey(info);
-    if (!S.hc || S.hc.k !== k) S.hc = { k: k, step: 0, count: 0 };   // starts fresh after every prayer
-    return S.hc;
+  function hcKey(pk) { return iso(todayO()) + ":" + pk; }
+  function hcState(pk) {
+    var k = hcKey(pk), day = iso(todayO());
+    if (!S.hcs || typeof S.hcs !== "object") S.hcs = {};
+    Object.keys(S.hcs).forEach(function (x) { if (x.indexOf(day) !== 0) delete S.hcs[x]; });   // fresh every day
+    if (!S.hcs[k]) S.hcs[k] = { step: 0, count: 0 };
+    return S.hcs[k];
   }
-  function hcInner(st, info) {
-    if (st.step >= HC.length) return '<div class="hc-done">✓ ' + t("done") + '</div><button class="hc-rst" data-act="hcReset">' + I.reset + "</button>";
+  function hcInner(st, pk) {
+    if (st.step >= HC.length) return '<div class="hc-done">✓ ' + t("done") + '</div><button class="hc-rst" data-act="hcReset" data-v="' + pk + '">' + I.reset + "</button>";
     var cur = HC[st.step], dh = DH[cur.d], C = 2 * Math.PI * 30;
     var txt = cur.long ? "لَا إِلَٰهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ" : dh.ar;
-    return '<button class="hc-tap" data-act="hcTap" aria-label="count"><svg viewBox="0 0 70 70"><circle cx="35" cy="35" r="30" class="bgc" stroke-width="6" fill="none"/>' +
+    return '<button class="hc-tap" data-act="hcTap" data-v="' + pk + '" aria-label="count"><svg viewBox="0 0 70 70"><circle cx="35" cy="35" r="30" class="bgc" stroke-width="6" fill="none"/>' +
       '<circle cx="35" cy="35" r="30" class="fgc" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + (C * (1 - st.count / cur.n)).toFixed(1) + '" transform="rotate(-90 35 35)"/></svg>' +
       "<b>" + st.count + "</b><small>/ " + cur.n + "</small></button>" +
-      '<div class="hc-txt"><div class="hc-ar">' + txt + "</div><b>" + (cur.long ? "La ilaha illallahu wahdahu…" : L(dh)) + "</b>" +
+      '<div class="hc-txt"><div class="hc-ar">' + txt + "</div>" +
       '<div class="hc-steps">' + HC.map(function (x, i) { return '<span class="' + (i < st.step ? "ok" : i === st.step ? "on" : "") + '"></span>'; }).join("") + "</div></div>" +
-      '<button class="hc-rst" data-act="hcReset" aria-label="' + t("reset") + '">' + I.reset + "</button>";
+      '<button class="hc-rst" data-act="hcReset" data-v="' + pk + '" aria-label="' + t("reset") + '">' + I.reset + "</button>";
   }
-  function homeCounter(info) {
-    var st = hcState(info);
-    return '<div class="sec"><h2>' + t("hcTitle") + (info.cur ? " · " + pName(info.cur) : "") + '</h2><button class="link" data-act="tab" data-v="adhkar">' + t("adhkar") + "</button></div>" +
-      '<div class="hc" id="hc">' + hcInner(st, info) + "</div>";
-  }
+
 
   /* ---- Ramadan ---- */
   function rmState(info) {
@@ -310,6 +331,9 @@
     if (h.m === 9) start = hStart(today);
     else for (i = 1; i < 400; i++) { var o = shift(today, i), hp = hParts(o); if (hp.m === 9 && hp.d === 1) { start = o; break; } }
     var rows = [], hi = -1, html = '<div class="screen">' + header(t("ramadanTitle"), "home") + '<div style="height:14px"></div>';
+    var rtab = UI.rtab || (h.m === 9 ? "duas" : "duas");
+    html += '<div class="seg"><button class="' + (rtab === "duas" ? "on" : "") + '" data-act="rTab" data-v="duas">' + t("rDuas") + '</button><button class="' + (rtab === "table" ? "on" : "") + '" data-act="rTab" data-v="table">' + t("rTable") + "</button></div>";
+    if (rtab === "duas") return html + ramadanDuas(h) + "</div>";
     if (!start) return html + '<p class="note">–</p></div>';
     var hy = hParts(start).y;
     html += '<div class="dnav"><div class="dt"><b>' + t("ramadan") + " " + hy + (S.lang === "ml" ? " ഹി." : " AH") + "</b><small>" + L(place()) + " · " + (h.m === 9 ? t("ramadanDay") + " " + h.d : t("ramadanStarts") + ": " + gDate(start, true)) + "</small></div></div>";
@@ -324,12 +348,147 @@
     html += "</tbody></table></div>" + shareBtns() + '<p class="note">' + t("ramadanNote") + "</p></div>";
     return html;
   }
+  function ramadanDuas(h) {
+    var R = (window.KPT_DUAS || {}).ramadan || [], G = [["fast", "rgFast"], ["prayer", "rgPrayer"], ["ten", "rgTen"], ["tarawih", "rgTarawih"], ["qadr", "rgQadr"], ["month", "rgMonth"]];
+    var day = h.m === 9 ? h.d : 0, out = "";
+    G.forEach(function (g) {
+      var items = R.filter(function (x) { return x.g === g[0]; }); if (!items.length) return;
+      out += '<div class="sec"><h2>' + t(g[1]) + "</h2></div>";
+      items.forEach(function (x, i) {
+        var now = x.d && day >= x.d[0] && day <= x.d[1];
+        out += '<div class="dk rdua' + (now ? " now" : "") + '"><div class="dkt">' + L(x.t) + (now ? ' <span class="badge">' + t("now") + "</span>" : "") + "</div>" +
+          (x.ar ? '<div class="ar">' + x.ar.replace(/\n/g, "<br>") + "</div>" : "") + (x.mlx ? '<div class="mlx">' + x.mlx + "</div>" : "") + "</div>";
+      });
+    });
+    return out + '<p class="note">' + t("rSource") + "</p>";
+  }
   function shareBtns() {
     return '<div class="actrow"><button class="btn ghost" data-act="shareTable">' + I.share + t("share") + "</button>" +
       (isNative ? "" : '<button class="btn ghost" data-act="print">' + I.print + t("print") + "</button>") + "</div>";
   }
 
   /* ---- Hijri calendar ---- */
+  /* ---------------- My dates: birthdays, anniversaries, death anniversaries ---------------- */
+  var ETYPES = { birthday: "🎂", anniv: "💍", death: "🕊️", other: "📌" };
+  function esc(x) { return String(x || "").replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function evs() { return Array.isArray(S.events) ? S.events : (S.events = []); }
+  function hijriLen(o) { var h = hParts(o); return hParts(shift(o, 30 - h.d + 1)).m === h.m ? 30 : 29; }
+  function evMatch(ev, o) {
+    if (ev.cal === "h") {
+      var h = hParts(o); if (h.m !== ev.hm) return false;
+      if (h.d === ev.hd) return true;
+      return ev.hd === 30 && h.d === 29 && hijriLen(o) === 29;          // 30th in a 29-day month → 29th
+    }
+    var g = fromIso(ev.date);
+    if (o.m === g.m && o.d === g.d) return true;
+    return g.m === 2 && g.d === 29 && o.m === 2 && o.d === 28 && new Date(Date.UTC(o.y, 1, 29)).getUTCMonth() !== 1;
+  }
+  function nextOcc(ev, from) {
+    from = from || todayO();
+    for (var k = 0; k < 390; k++) { var o = shift(from, k); if (evMatch(ev, o)) return { o: o, d: k }; }
+    return null;
+  }
+  function evYears(ev, o) {
+    if (ev.noYear) return 0;
+    var n = ev.cal === "h" ? hParts(o).y - ev.hy : o.y - fromIso(ev.date).y; return n > 0 ? n : 0;
+  }
+  function evLabel(ev) { return t("et_" + ev.type); }
+  function evWhen(ev) {
+    if (ev.cal === "h") return ev.hd + " " + hMonth(ev.hm) + (ev.noYear ? "" : " " + ev.hy + (S.lang === "ml" ? " ഹി." : " AH"));
+    var g = fromIso(ev.date); return new Date(Date.UTC(g.y, g.m - 1, g.d, 12)).toLocaleDateString(loc(), ev.noYear ? { day: "numeric", month: "long", timeZone: "UTC" } : { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  }
+  function myRow(x) {
+    var ev = x.ev, yrs = evYears(ev, x.o);
+    return '<div class="evrow mine t-' + ev.type + '" data-act="editEvent" data-v="' + ev.id + '"><div class="evd my"><span>' + ETYPES[ev.type] + '</span></div><div class="evn"><b>' + esc(ev.name) + "</b><small>" +
+      evLabel(ev) + (yrs ? " · " + fill(t(ev.type === "death" ? "yrsSince" : "yrsN"), { n: yrs }) : "") + " · " + gDate(x.o, true) + (ev.cal === "h" ? " · " + hParts(x.o).d + " " + hMonth(hParts(x.o).m) : "") + "</small></div>" +
+      '<span class="evin">' + (x.d === 0 ? t("todayEv") : fill(t("inDays"), { n: x.d })) + "</span></div>";
+  }
+  function myUpcoming() {
+    return evs().map(function (ev) { var r = nextOcc(ev); return r ? { o: r.o, d: r.d, ev: ev, mine: true } : null; }).filter(Boolean).sort(function (a, b) { return a.d - b.d; });
+  }
+  function personalOn(o) { return evs().filter(function (ev) { return evMatch(ev, o); }); }
+  /* ---------------- My daily list: own prayers, duas, dhikr with counts and reminders ---------------- */
+  var PRESETS = [
+    { n: { en: "Swalath", ml: "സ്വലാത്ത്" }, ar: "اَللّٰهُمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ", c: 100 },
+    { n: { en: "Istighfar", ml: "ഇസ്തിഗ്ഫാർ" }, ar: "أَسْتَغْفِرُ اللّٰهَ", c: 100 },
+    { n: { en: "La ilaha illallah", ml: "ലാ ഇലാഹ ഇല്ലല്ലാഹ്" }, ar: "لَا إِلٰهَ إِلَّا اللّٰهُ", c: 100 },
+    { n: { en: "SubhanAllahi wa bihamdihi", ml: "സുബ്ഹാനല്ലാഹി വബിഹംദിഹി" }, ar: "سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ", c: 100 },
+    { n: { en: "Surah Yasin", ml: "സൂറത്ത് യാസീൻ" }, c: 1, t: "06:30" },
+    { n: { en: "Surah Al-Mulk", ml: "സൂറത്തുൽ മുൽക്" }, c: 1, t: "21:30" },
+    { n: { en: "Surah Al-Waqi'ah", ml: "സൂറത്തുൽ വാഖിഅ" }, c: 1, t: "19:30" },
+    { n: { en: "Duha prayer", ml: "ളുഹാ നിസ്കാരം" }, c: 1, t: "09:00" },
+    { n: { en: "Tahajjud", ml: "തഹജ്ജുദ്" }, c: 1, t: "04:00" },
+    { n: { en: "Morning adhkar", ml: "പ്രഭാത ദിക്റുകൾ" }, c: 1, t: "06:00" },
+    { n: { en: "Evening adhkar", ml: "സായാഹ്ന ദിക്റുകൾ" }, c: 1, t: "17:30" }
+  ];
+  function habits() { return Array.isArray(S.habits) ? S.habits : (S.habits = []); }
+  function hlogToday() {
+    var d = iso(todayO()); if (!S.hlog || S.hlog.d !== d) S.hlog = { d: d, c: {} };
+    return S.hlog.c;
+  }
+  function habitRow(x) {
+    var c = hlogToday()[x.id] || 0, n = +x.target || 1, done = c >= n, pct = Math.min(100, Math.round(c / n * 100));
+    return '<div class="hb' + (done ? " done" : "") + '" id="hb_' + x.id + '"><button class="hb-main" data-act="editHabit" data-v="' + x.id + '"><b>' + esc(x.name) + "</b>" +
+      (x.ar ? '<span class="hb-ar">' + esc(x.ar) + "</span>" : "") +
+      '<small>' + (x.time ? "⏰ " + x.time + " · " : "") + (n > 1 ? c + " / " + n : (done ? "" : t("notYet"))) + '</small><span class="hb-bar"><i style="width:' + pct + '%"></i></span></button>' +
+      '<button class="hb-tap" data-act="habitTap" data-v="' + x.id + '" aria-label="count">' + (done ? "✓<small>" + t("done") + "</small>" : (n > 1 ? "+1<small>" + c + "</small>" : "✓")) + "</button></div>";
+  }
+  function dailyHome() {
+    var L0 = habits(), log = hlogToday(), nd = L0.filter(function (x) { return (log[x.id] || 0) >= (+x.target || 1); }).length;
+    var h = '<div class="sec"><h2>' + t("myDaily") + (L0.length ? ' <span class="hb-cnt">' + nd + "/" + L0.length + "</span>" : "") + '</h2><button class="link" data-act="newHabit">＋ ' + t("add") + "</button></div>";
+    if (!L0.length) return h + '<button class="mdempty daily" data-act="newHabit"><span class="ic">📿🤲📖</span><span><b>' + t("myDailyEmpty") + "</b><small>" + t("myDailySub") + '</small></span><span class="plus">＋</span></button>';
+    return h + '<div class="card hbcard">' + (nd === L0.length ? '<div class="hb-all">🌸 ' + t("allDone") + "</div>" : "") + L0.map(habitRow).join("") + "</div>";
+  }
+  function habitSheet(id) {
+    var x = habits().filter(function (e) { return e.id === id; })[0] || { name: "", ar: "", target: 100, time: "" };
+    var h = "<h3>" + (x.id ? t("editItem") : t("addItem")) + '</h3><div class="evform">';
+    if (!x.id) h += '<div class="presets">' + PRESETS.map(function (p, i) { return '<button data-act="habitPreset" data-v="' + i + '">' + L(p.n) + (p.c > 1 ? " ×" + p.c : "") + "</button>"; }).join("") + "</div>";
+    h += "<label>" + t("itemName") + '<input id="hbName" type="text" maxlength="60" value="' + esc(x.name) + '" placeholder="' + t("itemNameHint") + '"></label>' +
+      "<label>" + t("itemAr") + '<textarea id="hbAr" rows="2" dir="rtl" placeholder="اَللّٰهُمَّ ...">' + esc(x.ar) + "</textarea></label>" +
+      '<div class="row2"><label>' + t("itemCount") + '<input id="hbCount" type="number" min="1" max="10000" inputmode="numeric" value="' + (+x.target || 1) + '"></label>' +
+      "<label>" + t("itemTime") + '<input id="hbTime" type="time" value="' + esc(x.time || "") + '"></label></div>' +
+      '<div class="evhint">' + t("itemTimeHint") + "</div>" +
+      '<button class="btn" data-act="saveHabit" data-v="' + (x.id || "") + '">' + t("save") + "</button>" +
+      (x.id ? '<button class="btn ghost" data-act="resetHabit" data-v="' + x.id + '">' + t("resetToday") + '</button><button class="btn ghost danger" data-act="delHabit" data-v="' + x.id + '">' + t("delete") + "</button>" : "") + "</div>";
+    return h;
+  }
+  function myDatesHome() {
+    var list = myUpcoming().slice(0, 3);
+    var h = '<div class="sec"><h2>' + t("remindersHome") + '</h2><button class="link" data-act="goDates">' + t("seeAll") + "</button></div>";
+    if (!list.length) return h + '<button class="mdempty" data-act="newEvent"><span class="ic">🎂💍🕊️</span><span><b>' + t("addDate") + "</b><small>" + t("myDatesSub") + '</small></span><span class="plus">＋</span></button>';
+    return h + '<div class="card mdcard">' + list.map(myRow).join("") + '<button class="addrow" data-act="newEvent">＋ ' + t("addDate") + "</button></div>";
+  }
+  function datesScreen() {
+    var list = myUpcoming();
+    var h = '<div class="screen">' + header(t("myDates"), UI.prevTab2 || "home") + '<div style="height:14px"></div>' +
+      '<button class="btn addev" data-act="newEvent">＋ ' + t("addDate") + "</button>";
+    if (!list.length) h += '<div class="dk empty">' + t("noDates") + "</div>";
+    else h += '<div class="card">' + list.map(myRow).join("") + "</div>";
+    return h + '<p class="note">' + t("datesNote") + "</p></div>";
+  }
+  function eventSheet(id) {
+    var ev = evs().filter(function (e) { return e.id === id; })[0] || { type: "birthday", cal: "g", date: iso(todayO()), before: 1, time: "08:00", name: "" };
+    var types = ["birthday", "anniv", "death", "other"];
+    var h = "<h3>" + (ev.id ? t("editDate") : t("addDate")) + '</h3><div class="evform">' +
+      '<div class="etypes">' + types.map(function (k) { return '<button class="' + (ev.type === k ? "on" : "") + '" data-act="evType" data-v="' + k + '"><span>' + ETYPES[k] + "</span>" + t("et_" + k) + "</button>"; }).join("") + "</div>" +
+      "<label>" + t("evName") + '<input id="evName" type="text" maxlength="60" value="' + esc(ev.name) + '" placeholder="' + t("evNameHint") + '"></label>' +
+      "<label>" + t("evDate") + '<input id="evDate" type="date" value="' + esc(ev.date) + '"></label>' +
+      '<label class="chk"><input id="evNoYear" type="checkbox"' + (ev.noYear ? " checked" : "") + "> " + t("evNoYear") + "</label>" +
+      "<label>" + t("evRepeat") + '<select id="evCal"><option value="g"' + (ev.cal !== "h" ? " selected" : "") + ">" + t("calG") + '</option><option value="h"' + (ev.cal === "h" ? " selected" : "") + ">" + t("calH") + "</option></select></label>" +
+      '<div class="evhint" id="evHij">' + evPreview(ev.date, ev.cal) + "</div>" +
+      '<div class="row2"><label>' + t("evRemind") + '<select id="evBefore">' + [[0, t("onDay")], [1, "1 " + t("dayBefore")], [3, "3 " + t("daysBefore")], [7, "7 " + t("daysBefore")]].map(function (o) {
+        return '<option value="' + o[0] + '"' + (+ev.before === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") + "</select></label>" +
+      "<label>" + t("evTime") + '<input id="evTime" type="time" value="' + esc(ev.time || "08:00") + '"></label></div>' +
+      '<button class="btn" data-act="saveEvent" data-v="' + (ev.id || "") + '">' + t("save") + "</button>" +
+      (ev.id ? '<button class="btn ghost danger" data-act="delEvent" data-v="' + ev.id + '">' + t("delete") + "</button>" : "") + "</div>";
+    UI.evType = ev.type;
+    return h;
+  }
+  function evPreview(date, cal) {
+    if (!date) return "";
+    var g = fromIso(date), h = hParts(g);
+    return cal === "h" ? "↻ " + fill(t("repeatH"), { d: h.d + " " + hMonth(h.m) }) + " (" + h.d + " " + hMonth(h.m) + " " + h.y + ")" : "↻ " + fill(t("repeatG"), { d: new Date(Date.UTC(g.y, g.m - 1, g.d, 12)).toLocaleDateString(loc(), { day: "numeric", month: "long", timeZone: "UTC" }) }) + " · " + h.d + " " + hMonth(h.m) + " " + h.y;
+  }
   function upcoming(n) {
     var today = todayO(), out = [], i, o, h, ev;
     for (i = 0; i < 400 && out.length < n; i++) {
@@ -343,8 +502,10 @@
       '<span class="evin">' + (x.d === 0 ? t("todayEv") : fill(t("inDays"), { n: x.d })) + "</span></div>";
   }
   function upcomingHtml(n, noLink) {
-    var u = upcoming(n); if (!u.length) return "";
-    return '<div class="sec"><h2>' + t("upcoming") + "</h2>" + (noLink ? "" : '<button class="link" data-act="goHijri">' + t("hijriCal") + "</button>") + '</div><div class="card">' + u.map(evRow).join("") + "</div>";
+    var u = noLink ? upcoming(n).concat(myUpcoming().slice(0, n)).sort(function (a, b) { return a.d - b.d; }).slice(0, n + Math.min(2, evs().length)) : upcoming(n);
+    if (!u.length) return "";
+    return '<div class="sec"><h2>' + t("upcoming") + "</h2>" + (noLink ? "" : '<button class="link" data-act="goHijri">' + t("hijriCal") + "</button>") + '</div><div class="card">' + u.map(function (x) { return x.mine ? myRow(x) : evRow(x); }).join("") +
+      "</div>";
   }
   function hijriView() {
     var today = todayO(); if (!UI.hv) UI.hv = today;
@@ -354,21 +515,22 @@
     var g1 = new Date(Date.UTC(st.y, st.m - 1, st.d, 12)), g2 = days[days.length - 1].o, g2d = new Date(Date.UTC(g2.y, g2.m - 1, g2.d, 12));
     var gl = g1.toLocaleDateString(loc(), { month: "short", timeZone: "UTC" }) + (g1.getUTCMonth() !== g2d.getUTCMonth() ? " – " + g2d.toLocaleDateString(loc(), { month: "short", year: "numeric", timeZone: "UTC" }) : " " + g1.getUTCFullYear());
     var html = '<div class="dnav"><button class="arrow" data-act="hStep" data-v="-1">' + I.left + '</button><div class="dt"><b>' + hMonth(h0.m) + " " + h0.y + "</b><small>" + gl + '</small></div><button class="arrow" data-act="hStep" data-v="1">' + I.right + "</button></div>";
-    html += '<div class="card hcal"><div class="hgrid">';
+    var top = html; html = '<div class="card hcal"><div class="hgrid">';
     for (i = 0; i < 7; i++) html += '<div class="hwd">' + new Date(Date.UTC(2024, 0, 7 + i, 12)).toLocaleDateString(loc(), { weekday: "narrow", timeZone: "UTC" }) + "</div>";
     for (i = 0; i < wd0; i++) html += "<div></div>";
     var evs = [];
     days.forEach(function (x) {
-      var ev = eventsOn(x.h), cls = "hday" + (same(x.o, today) ? " today" : "") + (ev.length ? " ev" : "") + (new Date(Date.UTC(x.o.y, x.o.m - 1, x.o.d, 12)).getUTCDay() === 5 ? " fri" : "");
+      var ev = eventsOn(x.h), pe = personalOn(x.o), cls = "hday" + (same(x.o, today) ? " today" : "") + (ev.length ? " ev" : "") + (pe.length ? " mine" : "") + (new Date(Date.UTC(x.o.y, x.o.m - 1, x.o.d, 12)).getUTCDay() === 5 ? " fri" : "");
       ev.forEach(function (e) { evs.push({ o: x.o, e: e, h: x.h, d: Math.round((Date.UTC(x.o.y, x.o.m - 1, x.o.d) - Date.UTC(today.y, today.m - 1, today.d)) / 86400000) }); });
       html += '<div class="' + cls + '"><b>' + x.h.d + "</b><small>" + x.o.d + "</small></div>";
     });
     html += "</div></div>";
-    if (evs.length) html += '<div class="sec"><h2>' + t("eventsMonth") + '</h2></div><div class="card">' + evs.map(function (x) {
+    var grid = html, extra = "";
+    if (evs.length) extra += '<div class="sec"><h2>' + t("eventsMonth") + '</h2></div><div class="card">' + evs.map(function (x) {
       var r = evRow(x); return x.d < 0 ? r.replace(/<span class="evin">.*?<\/span>/, "") : r;
     }).join("") + "</div>";
-    html += upcomingHtml(5, true);
-    return html + '<p class="note">' + t("hijriNote") + "</p>";
+    var up = upcomingHtml(3, true);
+    return top + up + extra + '<div class="sec"><h2>' + hMonth(h0.m) + "</h2></div>" + grid + '<p class="note">' + t("hijriNote") + "</p>";
   }
 
   function timesScreen() {
@@ -387,7 +549,7 @@
       var mName = new Date(Date.UTC(o.y, o.m - 1, 15)).toLocaleDateString(loc(), { month: "long", year: "numeric", timeZone: "UTC" });
       h += '<div class="dnav"><button class="arrow" data-act="stepMonth" data-v="-1">' + I.left + '</button><div class="dt"><b>' + mName + '</b><small>' + L(place()) + '</small></div><button class="arrow" data-act="stepMonth" data-v="1">' + I.right + "</button></div>";
       var rows = [], hi = -1;
-      h += '<div class="printhead"><b>' + t("timetable") + " · " + mName + "</b><span>" + L(place()) + " · Kerala Prayer Times</span></div>";
+      h += '<div class="printhead"><b>' + t("timetable") + " · " + mName + "</b><span>" + L(place()) + " · Basmalah</span></div>";
       h += '<div class="card"><table class="month"><thead><tr><th>' + (S.lang === "ml" ? "തീയതി" : "Date") + "</th>" + PR.map(function (p) { return "<th>" + L(p) + "</th>"; }).join("") + "</tr></thead><tbody>";
       for (var d = 1; d <= dim; d++) {
         var od = { y: o.y, m: o.m, d: d }, tt = times(od), wd = new Date(Date.UTC(o.y, o.m - 1, d, 12)).toLocaleDateString(loc(), { weekday: "short", timeZone: "UTC" });
@@ -404,13 +566,35 @@
   }
 
   /* ---- Qibla ---- */
-  var CMP = { on: false, heading: null, buzzed: false, handler: null, needTap: false };
+  /* ---- Qibla (true-north corrected, smoothed, with calibration / tilt warnings) ---- */
+  var CMP = { on: false, heading: null, buzzed: false, handler: null, needTap: false, gotAbs: false, vx: 0, vy: 0, raw: [], acc: null, tilt: false, calib: false };
+  // Approximate magnetic declination (degrees, + = east) where no build-time model grid is available.
+  var DECL_TABLE = [[10, 76.3, -1.8], [8.5, 76.9, -2.0], [11.9, 75.4, -1.6], [12.97, 77.6, -1.4], [13.1, 80.3, -1.4], [19.1, 72.9, 0.3], [28.6, 77.2, 0.9],
+    [29.4, 48.0, 3.9], [24.7, 46.7, 3.4], [21.5, 39.2, 3.6], [21.4, 39.8, 3.6], [26.2, 50.6, 3.2], [25.3, 51.5, 2.8], [25.2, 55.3, 2.2], [24.5, 54.4, 2.4], [23.6, 58.4, 1.6], [17.0, 54.1, 1.4]];
+  function declination(lat, lng) {
+    var G = window.KPT_DECL;
+    if (G && lat >= G.lat0 && lng >= G.lon0) {
+      var fi = (lat - G.lat0) / G.step, fj = (lng - G.lon0) / G.step, i = Math.floor(fi), j = Math.floor(fj);
+      if (i >= 0 && j >= 0 && i < G.nlat - 1 && j < G.nlon - 1) {
+        var v = function (a, b) { return G.v[a * G.nlon + b]; }, di = fi - i, dj = fj - j;
+        return v(i, j) * (1 - di) * (1 - dj) + v(i + 1, j) * di * (1 - dj) + v(i, j + 1) * (1 - di) * dj + v(i + 1, j + 1) * di * dj;
+      }
+    }
+    var num = 0, den = 0, best = 1e9;
+    DECL_TABLE.forEach(function (r) {
+      var d = Math.hypot(r[0] - lat, (r[1] - lng) * Math.cos(lat * Math.PI / 180)); best = Math.min(best, d);
+      var w = 1 / Math.pow(d + 0.3, 2); num += w * r[2]; den += w;
+    });
+    return best < 8 ? num / den : 0;
+  }
   function qiblaScreen() {
-    var P = place(), q = PrayCalc.qibla(P.lat, P.lng);
+    var P = place(), q = PrayCalc.qibla(P.lat, P.lng), dec = declination(P.lat, P.lng);
     return '<div class="screen">' + header(t("qiblaTitle")) +
-      '<div class="compass-wrap"><div class="compass"><div class="kaaba-top"></div><div class="dial" id="dial"></div><div class="needle" id="needle"></div></div></div>' +
+      '<div class="compass-wrap"><div class="compass" id="compass"><div class="kaaba-top"></div><div class="dial" id="dial"></div><div class="needle" id="needle"></div></div></div>' +
       '<div class="qinfo"><div class="deg">' + Math.round(q.bearing) + '°</div><div class="sub">' + t("qiblaFrom") + " · " + t("distance") + ": " + Math.round(q.km).toLocaleString() + " km</div></div>" +
       '<div class="qstat" id="qstat">' + (CMP.on && CMP.heading != null ? t("turn") : t("compassHint")) + "</div>" +
+      '<div class="qwarn" id="qwarn" style="display:none"></div>' +
+      '<div class="qacc" id="qacc">' + t("trueNorth") + " (" + (dec >= 0 ? "+" : "") + dec.toFixed(1) + "°)</div>" +
       (CMP.needTap ? '<button class="btn" data-act="startCompass">' + t("enableCompass") + "</button>" : "") + "</div>";
   }
   function drawCompass() {
@@ -429,63 +613,101 @@
     $("#needle").innerHTML = '<svg viewBox="0 0 300 300"><path d="M150 70 L160 150 L150 145 L140 150 Z" fill="var(--p)" opacity=".85"/></svg>';
     updateCompass();
   }
+  var lastRot = 0;
   function updateCompass() {
     var dial = $("#dial"); if (!dial) return;
     var P = place(), b = PrayCalc.qibla(P.lat, P.lng).bearing, h = CMP.heading;
-    dial.style.transform = "rotate(" + (-(h || 0)).toFixed(1) + "deg)";
+    if (h != null) {   // rotate the shortest way so the dial never spins round
+      var target = -h, d = ((target - lastRot + 540) % 360) - 180; lastRot += d;
+      dial.style.transform = "rotate(" + lastRot.toFixed(1) + "deg)";
+    }
     var st = $("#qstat"); if (!st || h == null) return;
-    var diff = ((b - h + 540) % 360) - 180, ok = Math.abs(diff) < 4;
+    var diff = ((b - h + 540) % 360) - 180, ok = Math.abs(diff) <= 3;
     st.className = "qstat" + (ok ? " ok" : ""); st.textContent = ok ? "✓ " + t("aligned") : t("turn") + " (" + (diff > 0 ? "↻ " : "↺ ") + Math.abs(Math.round(diff)) + "°)";
-    if (ok && !CMP.buzzed) { haptic(); CMP.buzzed = true; } if (!ok) CMP.buzzed = false;
+    var cp = $("#compass"); if (cp) cp.classList.toggle("aligned", ok);
+    if (ok && !CMP.buzzed) { haptic(); CMP.buzzed = true; } if (Math.abs(diff) > 6) CMP.buzzed = false;
+    var w = $("#qwarn"); if (w) { var msg = CMP.tilt ? t("flat") : CMP.calib ? t("calib") : ""; w.textContent = msg; w.style.display = msg ? "" : "none"; }
+    var a = $("#qacc"); if (a && CMP.acc != null) {
+      var dec = declination(P.lat, P.lng);
+      a.textContent = t("accuracy") + " ±" + Math.max(1, Math.round(CMP.acc)) + "° · " + t("trueNorth") + " (" + (dec >= 0 ? "+" : "") + dec.toFixed(1) + "°)";
+    }
+  }
+  function circStd(arr) {
+    var sx = 0, sy = 0; arr.forEach(function (h) { sx += Math.cos(h * Math.PI / 180); sy += Math.sin(h * Math.PI / 180); });
+    var R = Math.min(1, Math.hypot(sx, sy) / arr.length); return Math.sqrt(-2 * Math.log(Math.max(R, 1e-6))) * 180 / Math.PI;
   }
   function startCompass() {
     var DO = window.DeviceOrientationEvent;
     if (CMP.on) return;
     function listen() {
-      CMP.on = true; CMP.heading = null; CMP.needTap = false;
+      CMP.on = true; CMP.heading = null; CMP.needTap = false; CMP.gotAbs = false; CMP.raw = []; CMP.vx = 0; CMP.vy = 0;
       CMP.handler = function (e) {
-        var h = null;
-        if (e.webkitCompassHeading != null) h = e.webkitCompassHeading;
-        else if (e.absolute && e.alpha != null) h = 360 - e.alpha;
-        if (h == null) return;
-        var so = (screen.orientation && screen.orientation.angle) || 0; h = (h + so + 360) % 360;
-        if (CMP.heading == null) CMP.heading = h;
-        else { var d = ((h - CMP.heading + 540) % 360) - 180; CMP.heading = (CMP.heading + d * 0.25 + 360) % 360; }
+        var mag = null, ios = e.webkitCompassHeading != null && !isNaN(e.webkitCompassHeading);
+        if (e.type === "deviceorientationabsolute") CMP.gotAbs = true;
+        if (ios) { mag = e.webkitCompassHeading; CMP.acc = e.webkitCompassAccuracy >= 0 ? e.webkitCompassAccuracy : null; CMP.calib = !(e.webkitCompassAccuracy >= 0) || e.webkitCompassAccuracy > 20; }
+        else {
+          if (e.type === "deviceorientation" && (CMP.gotAbs || !e.absolute)) return;   // relative angles are not a compass
+          if (e.alpha == null) return;
+          mag = (360 - e.alpha) % 360;                                                   // direction of the top of the phone
+          var so = (screen.orientation && screen.orientation.angle) || window.orientation || 0; mag = (mag + so + 360) % 360;
+        }
+        CMP.tilt = Math.abs(e.beta || 0) > 55 || Math.abs(e.gamma || 0) > 55;
+        var P = place(), tru = (mag + declination(P.lat, P.lng) + 360) % 360;
+        CMP.raw.push(tru); if (CMP.raw.length > 20) CMP.raw.shift();
+        if (!ios && CMP.raw.length >= 10) { var sd = circStd(CMP.raw); CMP.acc = Math.max(2, sd * 1.5); CMP.calib = sd > 9; }
+        // low-pass on the unit vector – smooth without lag around north
+        var k = CMP.heading == null ? 1 : 0.18, r = tru * Math.PI / 180;
+        CMP.vx = CMP.vx * (1 - k) + Math.cos(r) * k; CMP.vy = CMP.vy * (1 - k) + Math.sin(r) * k;
+        CMP.heading = (Math.atan2(CMP.vy, CMP.vx) * 180 / Math.PI + 360) % 360;
         updateCompass();
       };
       if ("ondeviceorientationabsolute" in window) window.addEventListener("deviceorientationabsolute", CMP.handler, true);
       window.addEventListener("deviceorientation", CMP.handler, true);
+      window.addEventListener("compassneedscalibration", onCalib, true);
       if (UI.tab === "qibla" && $("#qstat") && !$("#dial").innerHTML) render();
       setTimeout(function () { if (CMP.on && CMP.heading == null) { var st = $("#qstat"); if (st) st.textContent = t("noCompass"); } }, 4000);
     }
     if (DO && typeof DO.requestPermission === "function") {
-      // iPhone asks once for motion access; if it needs a tap, show a single button as fallback.
       DO.requestPermission().then(function (r) { if (r === "granted") listen(); else { CMP.needTap = true; render(); } })
         .catch(function () { CMP.needTap = true; if (UI.tab === "qibla") render(); });
     } else listen();
   }
+  function onCalib(e) { CMP.calib = true; try { e.preventDefault(); } catch (x) { } }
   function stopCompass() {
-    if (CMP.handler) { window.removeEventListener("deviceorientationabsolute", CMP.handler, true); window.removeEventListener("deviceorientation", CMP.handler, true); }
+    if (CMP.handler) { window.removeEventListener("deviceorientationabsolute", CMP.handler, true); window.removeEventListener("deviceorientation", CMP.handler, true); window.removeEventListener("compassneedscalibration", onCalib, true); }
     CMP.handler = null; CMP.on = false;
   }
 
+
   /* ---- Adhkar ---- */
+  var HC_IDS = ["subhanallah", "alhamdulillah", "allahuakbar", "tahlil100"];
+  function dkCard(x, pk) {
+    var need = (x.countFM && (pk === "fajr" || pk === "maghrib")) ? x.countFM : (x.count || 1), key = pk + ":" + x.id, c = UI.counts[key] || 0, done = c >= need;
+    return '<div class="dk ar-only' + (x.long ? " long" : "") + (done ? " done" : "") + '">' + (x.t ? '<div class="dkt">' + L(x.t) + "</div>" : "") + '<div class="ar">' + x.ar.replace(/\n/g, "<br>") + "</div>" +
+      '<div class="counter">' + (need > 1 ? '<span class="times">×' + need + "</span>" : "") +
+      '<button class="tap" data-act="count" data-v="' + x.id + '" data-n="' + need + '">' + (done ? "✓" : c + " / " + need) + "</button>" +
+      '<button class="rst" data-act="resetOne" data-v="' + x.id + '" aria-label="' + t("reset") + '">' + I.reset + "</button></div></div>";
+  }
   function adhkarScreen() {
     if (!UI.dkPrayer) { var inf = nextInfo(); UI.dkPrayer = inf.cur || "fajr"; }
-    var pk = UI.dkPrayer;
+    var pk = UI.dkPrayer, p = PR.filter(function (x) { return x.k === pk; })[0], tt = times(todayO());
     var items = DK.filter(function (x) { return x.when === "all" || x.when.indexOf(pk) >= 0; });
-    var h = '<div class="screen">' + header(t("adhkarTitle")) + '<div style="height:14px"></div>' +
-      '<button class="linkcard" data-act="tab" data-v="tasbih"><span class="ti">' + I.tasbih + "</span><span><b>" + t("tasbihTitle") + "</b><small>" + t("tapCircle") + "</small></span>" + I.right + "</button>" +
-      '<div class="pchips">' +
+    var h = '<div class="screen">' + header(t("adhkarTitle"), UI.prevTab || "home") + '<div style="height:14px"></div><div class="pchips">' +
       FIVE.map(function (k) { return '<button class="' + (k === pk ? "on" : "") + '" data-act="dkP" data-v="' + k + '">' + pName(k) + "</button>"; }).join("") + "</div>";
+    h += '<div class="phead"><div class="pi">' + I[pk] + '</div><div><div class="par">' + p.ar + "</div><small>" + L(p) + " · " + fmtT(tt[pk]) + "</small></div></div>";
+    var placed = false;
     items.forEach(function (x) {
-      var need = (x.countFM && (pk === "fajr" || pk === "maghrib")) ? x.countFM : x.count, key = pk + ":" + x.id, c = UI.counts[key] || 0, done = c >= need;
-      h += '<div class="dk' + (done ? " done" : "") + '"><div class="dt"><b>' + L(x.title) + '</b><span class="cnt">' + need + "× </span></div>" +
-        '<div class="ar">' + x.ar + "</div>" + (x.tr ? '<div class="tr">' + x.tr + "</div>" : "") + '<div class="en">' + (S.lang === "ml" && x.ml ? x.ml : x.en) + "</div>" +
-        '<div class="src">' + t("source") + ": " + x.src + "</div>" +
-        '<div class="counter"><button class="tap" data-act="count" data-v="' + x.id + '" data-n="' + need + '">' + (done ? "✓ " + t("done") : c + " / " + need) + '</button><button class="rst" data-act="resetOne" data-v="' + x.id + '">' + t("reset") + "</button></div></div>";
+      if (HC_IDS.indexOf(x.id) >= 0) {
+        if (!placed) { placed = true; h += '<div class="sec"><h2>' + t("hcTitle") + '</h2></div><div class="hc" id="hc">' + hcInner(hcState(pk), pk) + "</div>"; }
+        return;
+      }
+      h += dkCard(x, pk);
     });
-    return h + '<p class="note">' + t("reviewNote") + "</p></div>";
+    var KD = window.KPT_DUAS || {}, du = KD[pk] || [];
+    h += '<div class="sec"><h2>' + t("duasTitle") + " · " + pName(pk) + "</h2></div>";
+    if (du.length) du.forEach(function (x, i) { h += dkCard({ id: "dua" + i, ar: x.ar, count: x.count || 1, long: true }, pk); });
+    else h += '<div class="dk empty">' + t("duasSoon") + "</div>";
+    return h + "</div>";
   }
 
   /* ---- Tasbih ---- */
@@ -493,8 +715,8 @@
   function tbOffset() { var b = S.tb, tg = +b.target; return tg > 0 ? TBC * (1 - b.count / tg) : TBC * (1 - (b.count % 100) / 100); }
   function tasbihScreen() {
     var b = S.tb, d = DH[b.i] || DH[0];
-    var h = '<div class="screen">' + header(t("tasbihTitle"), "adhkar") + '<div style="height:14px"></div><div class="pchips">' +
-      DH.map(function (x, i) { return '<button class="' + (i === b.i ? "on" : "") + '" data-act="tbDhikr" data-v="' + i + '">' + L(x) + "</button>"; }).join("") + "</div>";
+    var h = '<div class="screen">' + header(t("tasbihTitle"), "home") + '<div style="height:14px"></div><div class="pchips">' +
+      DH.map(function (x, i) { return '<button class="arb' + (i === b.i ? " on" : "") + '" data-act="tbDhikr" data-v="' + i + '">' + x.ar + "</button>"; }).join("") + "</div>";
     h += '<div class="tsb-wrap"><button class="tsb" data-act="tbTap" aria-label="count"><svg viewBox="0 0 260 260"><circle cx="130" cy="130" r="120" class="bgc" stroke-width="12" fill="none"/>' +
       '<circle id="tbRing" cx="130" cy="130" r="120" class="fgc" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="' + TBC.toFixed(1) + '" stroke-dashoffset="' + tbOffset().toFixed(1) + '" transform="rotate(-90 130 130)"/></svg>' +
       '<div class="tin"><div class="tar">' + d.ar + '</div><div class="tnum" id="tbCount">' + b.count + '</div><div class="ttg">' + (+b.target ? "/ " + b.target : "∞") + "</div></div></button></div>";
@@ -503,7 +725,7 @@
     h += '<div class="sgt">' + t("target") + '</div><div class="seg">' + [33, 99, 100, 0].map(function (n) {
       return '<button class="' + (+b.target === n ? "on" : "") + '" data-act="tbTarget" data-v="' + n + '">' + (n || t("unlimited")) + "</button>";
     }).join("") + "</div>";
-    return h + '<p class="note">' + L(d) + "</p></div>";
+    return h + "</div>";
   }
   var tbSaveT = null;
   function tbSave() { clearTimeout(tbSaveT); tbSaveT = setTimeout(function () { save(true); }, 700); }
@@ -524,6 +746,14 @@
   function setupScreen() {
     var and = platform === "android", ios = platform === "ios";
     var h = '<div class="screen">' + header(t("setupTitle"), "settings") + '<p class="lead">' + t("setupSub") + '</p><div class="sgrp">';
+    if (isNative) {
+      var sc = UI.sched, okLn = !!LN, msg;
+      if (!okLn) msg = t("lnMissing");
+      else if (!sc) msg = t("checking");
+      else if (sc.err) msg = t("schedErr") + " " + sc.err;
+      else msg = fill(t("schedOk"), { n: sc.n }) + (sc.next ? " · " + t("nextAlert") + ": " + sc.next.title + " (" + sc.next.at.toLocaleDateString(loc(), { weekday: "short", day: "numeric", month: "short" }) + ")" : "");
+      h += stRow(I.bell, t("alertsTitle"), msg, okLn && sc && !sc.err && sc.n > 0 ? true : (sc || !okLn ? false : null), "recheck", t("check"));
+    }
     h += stRow(I.bell, t("stNotif"), t("stNotifHelp"), isNative ? !UI.notifOff : "web", "askNotif");
     if (and || !isNative) h += stRow(I.times, t("stExact"), t("stExactHelp"), isNative ? !UI.exactOff : "web", "fixExact");
     if (and || !isNative) h += stRow(I.shield, t("stBattery"), t("stBatteryHelp"), isNative ? (UI.batt === null ? null : UI.batt) : "web", "openBattery", UI.batt === null ? t("fix") : undefined);
@@ -571,6 +801,7 @@
       '<div class="srow"><div class="sl">' + t("ramadanMode") + "</div>" + sel("ramadan", [["auto", t("rmAuto")], ["on", t("rmOn")], ["off", t("rmOff")]], S.ramadan) + "</div>" +
       '<div class="srow"><div class="sl">' + t("suhoorRem") + "</div>" + sel("suhoor", [[0, t("none")], [30, "30 " + t("minBeforeFajr")], [45, "45 " + t("minBeforeFajr")], [60, "60 " + t("minBeforeFajr")], [90, "90 " + t("minBeforeFajr")]], S.suhoor) + "</div>" +
       '<div class="srow"><div class="sl">' + t("jumuah") + "</div>" + sel("jumuah", [[0, t("none")], [30, "30 " + t("minBeforeDhuhr")], [60, "60 " + t("minBeforeDhuhr")], [90, "90 " + t("minBeforeDhuhr")], [120, "120 " + t("minBeforeDhuhr")]], S.jumuah) + "</div>" +
+      '<div class="srow" data-act="goDates"><div class="sl">' + t("myDates") + "<small>" + t("myDatesSub") + "</small></div>" + I.right.replace("<svg", '<svg width="18" height="18"') + "</div>" +
       '<div class="srow" data-act="goRamadan"><div class="sl">' + t("ramadanTitle") + "</div>" + I.right.replace("<svg", '<svg width="18" height="18"') + "</div></div>";
     h += '<div class="sgt">' + t("calcSection") + '</div><div class="sgrp">' +
       '<div class="srow"><div class="sl">' + t("method") + "</div>" + sel("method", [["karachi", "Kerala / Karachi 18°"], ["mwl", "Muslim World League"], ["egypt", "Egyptian"], ["makkah", "Umm al-Qura"]], S.method) + "</div>" +
@@ -582,28 +813,48 @@
     h += '<div class="sgt">' + t("generalSection") + '</div><div class="sgrp">' +
       '<div class="srow"><div class="sl">' + t("language") + "</div>" + sel("lang", [["en", "English"], ["ml", "മലയാളം"]], S.lang) + "</div>" +
       '<div class="srow"><div class="sl">' + t("timeFormat") + "</div>" + sel("fmt", [["12", "12h"], ["24", "24h"]], S.fmt) + "</div>" +
-      '<div class="srow"><div class="sl">' + t("homeBg") + "</div>" + sel("bg", [["bluehour", t("bgBlue")], ["sunrise", t("bgSunrise")], ["kerala", t("bgKerala")], ["image", t("bgImage")], ["sky", t("bgSky")]], S.bg) + "</div>" +
+      '<div class="srow"><div class="sl">' + t("homeBg") + "</div>" + sel("bg", [["light", t("bgLight")], ["night", t("bgNight")], ["pattern", t("bgPattern")]], S.bg) + "</div>" +
       '<div class="srow"><div class="sl">' + t("theme") + "</div>" + sel("theme", [["auto", t("themeAuto")], ["light", t("themeLight")], ["dark", t("themeDark")]], S.theme) + "</div></div>";
-    h += '<div class="sgt">' + t("about") + '</div><div class="sgrp"><div class="srow"><div class="sl" style="font-size:.85rem;line-height:1.5">' + t("aboutText") + "<small>v2.9 · 12 Nov 2026</small></div></div>" +
+    h += '<div class="aboutwrap"><div class="sgt">' + t("about") + '</div><div class="aboutmsg"><div class="am-bism">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيمِ</div>' +
+      '<div class="am-ml">ഈ സംരംഭത്തിന് പിന്നിൽ പ്രവർത്തിച്ചവരെ നിങ്ങളുടെ ദുആകളിൽ ഉൾപ്പെടുത്തണമെന്ന് അപേക്ഷിക്കുന്നു.</div>' +
+      (S.lang === "ml" ? "" : '<div class="am-en">' + t("aboutMsgEn") + "</div>") +
+      '<div class="am-by">' + t("doneBy") + "</div></div>" +
+      '<div class="sgrp"><div class="srow"><div class="sl" style="font-size:.85rem;line-height:1.5">' + t("aboutText") + "<small>Basmalah v3.6 · 12 Nov 2026</small></div></div>" +
       '<div class="srow" data-act="credits"><div class="sl">' + t("credits") + "</div>" + I.right.replace("<svg", '<svg width="18" height="18"') + "</div>" +
       '<div class="srow" data-act="privacy"><div class="sl">' + t("privacy") + "</div>" + I.right.replace("<svg", '<svg width="18" height="18"') + "</div></div>";
+    h += "</div>";
     return h + "</div>";
   }
 
   /* ---- Sheets (district picker, sound picker) ---- */
-  function districtGrid(inSheet) {
-    return '<button class="gpsbtn" data-act="gps">' + I.pin + "<span>" + t("useGps") + "</span></button>" +
-      '<div class="dgrid">' + DIST.map(function (d, i) {
+  function districtGrid() {
+    var gps = S.district === -1, open = UI.locKerala !== undefined ? UI.locKerala : !gps;
+    return '<div class="locopt">' +
+      '<button class="lo' + (gps ? " sel" : "") + '" data-act="gps"><span class="loi">' + I.pin + '</span><span class="lot"><b>' + t("myLocation") + "</b><small>" + (gps && S.gpsName ? S.gpsName : t("useGps")) + '</small></span><span class="rad"></span></button>' +
+      '<button class="lo' + (!gps ? " sel" : "") + '" data-act="locKerala"><span class="loi">' + I.mosque + '</span><span class="lot"><b>' + t("kerala") + "</b><small>" + (!gps ? L(place()) : t("pickDistrict")) + '</small></span><span class="chev' + (open ? " up" : "") + '">' + I.down + "</span></button></div>" +
+      (open ? '<div class="dgrid">' + DIST.map(function (d, i) {
         return '<button class="dbtn' + (S.district === i ? " sel" : "") + '" data-act="pickDistrict" data-v="' + i + '"><b>' + (S.lang === "ml" ? d.ml : d.en) + "</b><small>" + (S.lang === "ml" ? d.en : d.ml) + "</small></button>";
-      }).join("") + "</div>";
+      }).join("") + "</div>" : "");
   }
   function sheetHtml() {
     var h = '<div class="sheet-bg" data-act="closeSheet"></div><div class="sheet"><div class="grab"></div>';
-    if (UI.sheet === "district") h += "<h3>" + t("chooseDistrict") + "</h3>" + districtGrid(true);
+    if (UI.sheet === "district") h += "<h3>" + t("chooseLoc") + "</h3>" + districtGrid();
     else if (UI.sheet === "credits") h += "<h3>" + t("credits") + '</h3><div class="sgrp"><div class="srow"><div class="sl" style="font-size:.86rem;line-height:1.5">' + t("creditsIntro") + "</div></div>" +
       ADH.filter(function (a) { return a.credit; }).map(function (a) {
         return '<div class="srow"><div class="sl">' + L(a) + "<small>" + t("recBy") + ": " + a.credit + "<br>commons.wikimedia.org/wiki/File:" + a.src.replace(/ /g, "_") + "</small></div></div>";
-      }).join("") + '<div class="srow"><div class="sl" style="font-size:.84rem">' + t("fonts") + "</div></div></div>";
+      }).join("") + '<div class="srow"><div class="sl" style="font-size:.84rem">' + t("fonts") + "</div></div>" +
+      '<div class="srow"><div class="sl" style="font-size:.84rem">Quran text: Tanzil Project – Uthmani text, used verbatim (tanzil.net). Recitation: Mishary Rashid Alafasy, streamed from Islamic Network (alquran.cloud).</div></div></div>';
+    else if (UI.sheet && UI.sheet.indexOf("adua:") === 0) {
+      var AD = ((window.KPT_DUAS || {}).adhan || []), ai = +UI.sheet.slice(5);
+      h += '<div class="adtabs">' + AD.map(function (x, i) { return '<button class="' + (i === ai ? "on" : "") + '" data-act="aDua" data-v="' + i + '">' + L(x.ts || x.t) + "</button>"; }).join("") + "</div>";
+      var x0 = AD[ai] || AD[0], txt = x0.ref ? x0.ar + "<br>" + ((DK.filter(function (d) { return d.id === x0.ref; })[0] || {}).ar || "") : x0.ar.replace(/\n/g, "<br>");
+      h += '<div class="addesc">' + L(x0.t) + '</div><div class="adtext">' + txt + "</div>";
+    }
+    else if (UI.sheet && UI.sheet.indexOf("habit:") === 0) h += habitSheet(UI.sheet.slice(6));
+    else if (UI.sheet && UI.sheet.indexOf("event:") === 0) h += eventSheet(UI.sheet.slice(6));
+    else if (UI.sheet === "reciter") h += "<h3>" + t("reciter") + '</h3><div class="sgrp">' + RECITERS.map(function (r) {
+        return '<div class="sound' + (reciter()[0] === r[0] ? " sel" : "") + '" data-act="pickReciter" data-v="' + r[0] + '"><span class="rad"></span><div class="sn"><b class="rar">' + r[1] + '</b><small class="cr">' + r[2] + "</small></div></div>";
+      }).join("") + "</div>";
     else if (UI.sheet === "privacy") h += "<h3>" + t("privacy") + '</h3><div class="sgrp"><div class="srow"><div class="sl" style="line-height:1.6;font-size:.92rem">' + t("privacyText") + "</div></div></div>";
     else {
       var key = UI.sheet, pk = key.indexOf("ps:") === 0 ? key.slice(3) : null, cur = pk ? (S.ps[pk] || "") : S[key];
@@ -629,6 +880,236 @@
     var dark = S.theme === "dark" || (S.theme === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
   }
+
+
+  /* ---------------- Quran streak ---------------- */
+  var REWARDS = [[3, "🌱", "seedling"], [7, "🌿", "sprout"], [10, "🌸", "flower"], [15, "🌺", "hibiscus"], [21, "🌻", "sunflower"], [30, "🌷", "tulip"],
+    [40, "💐", "bouquet"], [50, "🌳", "tree"], [75, "🌹", "rose"], [100, "🏵️", "garden"], [150, "🌴", "palm"], [200, "🌟", "star"], [365, "🏆", "year"]];
+  var STREAK_SECS = 60;   // reading or listening for one minute counts as a day
+  function stDay(o) { return iso(o || todayO()); }
+  function streakNow() {
+    var k = S.streak || {}, today = stDay(), yest = stDay(shift(todayO(), -1));
+    return (k.last === today || k.last === yest) ? (k.count || 0) : 0;
+  }
+  function readToday() { var k = S.streak || {}; return k.last === stDay(); }
+  function nextReward(n) { for (var i = 0; i < REWARDS.length; i++) if (REWARDS[i][0] > n) return REWARDS[i]; return null; }
+  function earned(n) { return REWARDS.filter(function (r) { return r[0] <= n; }); }
+  function streakTick(secs) {
+    var k = S.streak || (S.streak = { count: 0, best: 0 }), today = stDay();
+    if (k.last === today) return;
+    if (k.day !== today) { k.day = today; k.secs = 0; }
+    k.secs = (k.secs || 0) + secs;
+    if (k.secs < STREAK_SECS) { if (k.secs % 15 === 0) save(true); return; }
+    var yest = stDay(shift(todayO(), -1));
+    k.count = k.last === yest ? (k.count || 0) + 1 : 1; k.last = today; k.best = Math.max(k.best || 0, k.count);
+    save(true);
+    var r = REWARDS.filter(function (x) { return x[0] === k.count; })[0];
+    celebrate(k.count, r);
+  }
+  function celebrateDaily() {
+    var ov = document.createElement("div"); ov.className = "celebrate";
+    var p = ""; for (var i = 0; i < 16; i++) p += '<span class="petal" style="left:' + Math.round(Math.random() * 100) + "%;animation-delay:" + (Math.random() * 1.2).toFixed(2) + 's">🌸</span>';
+    ov.innerHTML = p + '<div class="cbox"><div class="cbig">🤲</div><div class="cnum">' + t("allDone") + '</div><div class="cmsg">' + t("allDoneMsg") + '</div><button data-act="closeCelebrate">' + t("ok") + "</button></div>";
+    document.body.appendChild(ov);
+  }
+  function celebrate(n, r) {
+    var ov = document.createElement("div"); ov.className = "celebrate";
+    var petals = ""; for (var i = 0; i < 18; i++) petals += '<span class="petal" style="left:' + Math.round(Math.random() * 100) + "%;animation-delay:" + (Math.random() * 1.5).toFixed(2) + "s;font-size:" + (18 + Math.round(Math.random() * 16)) + 'px">' + (r ? r[1] : "✨") + "</span>";
+    ov.innerHTML = petals + '<div class="cbox"><div class="cbig">' + (r ? r[1] : "🔥") + '</div><div class="cnum">' + n + " " + t(n === 1 ? "day" : "days") + "</div>" +
+      '<div class="cmsg">' + (r ? fill(t("rewardMsg"), { n: n, r: t("rw_" + r[2]) }) : t("streakMsg")) + '</div><button data-act="closeCelebrate">' + t("ok") + "</button></div>";
+    document.body.appendChild(ov);
+    try { if (navigator.vibrate) navigator.vibrate(r ? [40, 60, 40, 60, 120] : [30]); } catch (e) { }
+    if (!r) setTimeout(function () { if (ov.parentNode) ov.remove(); }, 2600);
+    var sc = $("#streakCard"); if (sc) sc.outerHTML = streakCard(true);
+  }
+  function streakCard(big) {
+    var n = streakNow(), nx = nextReward(n), got = earned(n), done = readToday();
+    var left = nx ? nx[0] - n : 0;
+    var h = '<div class="streak' + (big ? " big" : "") + '" id="streakCard"' + (big ? "" : ' data-act="tab" data-v="quran"') + '><div class="sk-top"><span class="fire' + (done ? " on" : "") + '">🔥</span>' +
+      '<div class="sk-n"><b>' + n + "</b><small>" + t(n === 1 ? "day" : "days") + '</small></div><div class="sk-t"><b>' + t("qStreak") + "</b><small>" +
+      (done ? "✓ " + t("readToday") : t("readMinute")) + "</small></div>" + (nx ? '<div class="sk-next"><span>' + nx[1] + "</span><small>" + fill(t("moreDays"), { n: left }) + "</small></div>" : "") + "</div>";
+    if (nx) { var prev = got.length ? got[got.length - 1][0] : 0; h += '<div class="sk-bar"><span style="width:' + Math.round((n - prev) / (nx[0] - prev) * 100) + '%"></span></div>'; }
+    if (big) {
+      h += '<div class="garden">' + REWARDS.map(function (r) { var ok = n >= r[0] || (S.streak && S.streak.best >= r[0]); return '<div class="gf' + (ok ? " ok" : "") + '"><span>' + r[1] + "</span><small>" + r[0] + "</small></div>"; }).join("") + "</div>";
+      if (S.streak && S.streak.best) h += '<div class="sk-best">' + t("bestStreak") + ": " + S.streak.best + " " + t("days") + "</div>";
+    }
+    return h + "</div>";
+  }
+
+  /* ---------------- Quran ---------------- */
+  var SUR = window.KPT_SURAHS || [], QCACHE = {}, QALL = null, QA = { n: 0, i: 0, audio: null }, QAUD = {};
+  var RECITERS = [["mp3q.nufais", "أحمد النفيس", "Ahmad Al-Nufais"], ["ar.alafasy", "مشاري العفاسي", "Mishary Alafasy"], ["ar.abdurrahmaansudais", "عبدالرحمن السديس", "Abdurrahman As-Sudais"],
+    ["ar.saoodshuraym", "سعود الشريم", "Saud Ash-Shuraim"], ["ar.mahermuaiqly", "ماهر المعيقلي", "Maher Al-Muaiqly"], ["ar.abdulsamad", "عبدالباسط عبدالصمد", "Abdul Basit Abdus-Samad"],
+    ["ar.husary", "محمود خليل الحصري", "Mahmoud Khalil Al-Husary"], ["ar.husarymujawwad", "الحصري (المجود)", "Al-Husary (Mujawwad)"], ["ar.hudhaify", "علي الحذيفي", "Ali Al-Hudhaify"],
+    ["ar.shaatree", "أبو بكر الشاطري", "Abu Bakr Ash-Shatri"], ["ar.ahmedajamy", "أحمد العجمي", "Ahmed Al-Ajamy"], ["ar.muhammadayyoub", "محمد أيوب", "Muhammad Ayyub"],
+    ["ar.muhammadjibreel", "محمد جبريل", "Muhammad Jibreel"], ["ar.abdullahbasfar", "عبد الله بصفر", "Abdullah Basfar"], ["ar.hanirifai", "هاني الرفاعي", "Hani Ar-Rifai"],
+    ["ar.ibrahimakhbar", "إبراهيم الأخضر", "Ibrahim Al-Akhdar"], ["ar.aymanswoaid", "أيمن سويد", "Ayman Suwaid"]];
+  function reciter() { return RECITERS.filter(function (r) { return r[0] === S.qr; })[0] || RECITERS[1]; }
+  function pad3(n) { return ("00" + n).slice(-3); }
+  /* Ahmad Al-Nufais: one file per surah from MP3Quran.net, with per-ayah timings (MP3Quran timing API) when available. */
+  var NUF = null, NUFT = {};
+  function nufaisInfo() {
+    if (NUF) return Promise.resolve(NUF);
+    var fb = { server: "https://server16.mp3quran.net/nufais/Rewayat-Hafs-A-n-Assem/", read: null };
+    return fetch("https://mp3quran.net/api/v3/reciters?language=eng").then(function (r) { return r.json(); }).then(function (j) {
+      var rc = (j.reciters || []).filter(function (x) { return /nufais|nafis/i.test(x.name || ""); })[0];
+      var m = rc && (rc.moshaf || []).filter(function (x) { return /hafs/i.test(x.name || "") || x.moshaf_type == 11; })[0] || (rc && rc.moshaf && rc.moshaf[0]);
+      return (NUF = m ? { server: m.server, read: m.id } : fb);
+    }).catch(function () { return (NUF = fb); });
+  }
+  function nufaisTimings(n, info) {
+    if (NUFT[n] !== undefined) return Promise.resolve(NUFT[n]);
+    if (!info.read) return Promise.resolve(NUFT[n] = null);
+    return fetch("https://mp3quran.net/api/v3/ayat_timing?surah=" + n + "&read=" + info.read).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (a) { return (NUFT[n] = Array.isArray(a) && a.length ? a : null); }).catch(function () { return (NUFT[n] = null); });
+  }
+  function nufaisPlay(n, i, single) {
+    var token = {}; QA.n = n; QA.i = i; QA.token = token; QA.single = !!single; QA.audio = { pause: function () { } };
+    nufaisInfo().then(function (info) {
+      return nufaisTimings(n, info).then(function (tm) {
+        if (QA.token !== token) return;
+        var seg = function (k) { return tm ? tm.filter(function (x) { return +x.ayah === k; })[0] : null; };
+        if (!tm && (single || i > 1)) { toast(t("noTiming")); if (single) { qStop(); return; } }
+        var au = new Audio(info.server + pad3(n) + ".mp3"); QA.audio = au; var started = false;
+        au.addEventListener("loadedmetadata", function () { var g = seg(i); if (g && !started) au.currentTime = g.start_time / 1000; started = true; });
+        au.addEventListener("timeupdate", function () {
+          if (QA.audio !== au || !tm) return;
+          var ms = au.currentTime * 1000, cur = tm.filter(function (x) { return +x.ayah > 0 && ms >= x.start_time && ms < x.end_time; })[0];
+          if (QA.single) { var g = seg(i); if (g && ms >= g.end_time) { qStop(); return; } }
+          if (cur && +cur.ayah !== QA.i) {
+            var p = document.querySelector(".ay.playing"); if (p) p.classList.remove("playing");
+            QA.i = +cur.ayah; streakTick(15); var el = $("#ay" + QA.i); if (el) { el.classList.add("playing"); el.scrollIntoView({ block: "center", behavior: "smooth" }); }
+          }
+        });
+        au.onended = function () { if (QA.audio === au) { qStop(); render(); } };
+        au.onerror = function () { if (QA.audio === au) { qStop(); toast(t("quranOffline").split(".")[0]); render(); } };
+        au.play().catch(function () { });
+      });
+    });
+  }
+  function ayahAudio(n, i) {   // exact audio links for this reciter and surah, from the Islamic Network (alquran.cloud) API
+    var key = (S.qr || "") + ":" + n, id = reciter()[0];
+    if (QAUD[key]) return Promise.resolve(QAUD[key][i - 1]);
+    return fetch("https://api.alquran.cloud/v1/surah/" + n + "/" + id).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (j) {
+      QAUD[key] = j.data.ayahs.map(function (a) { return [a.audio].concat(a.audioSecondary || []); });
+      return QAUD[key][i - 1];
+    }).catch(function () { return ["https://cdn.islamic.network/quran/audio/128/" + id + "/" + (ayahBase(n) + i) + ".mp3"]; });
+  }
+  var BISM = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
+  function arNum(n) { return String(n).replace(/\d/g, function (d) { return "٠١٢٣٤٥٦٧٨٩"[d]; }); }
+  function qNorm(w) { return w.replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, "").replace(/[ٱأإآ]/g, "ا"); }
+  function qStrip(n, text) { if (n === 1) return text; var w = text.split(" "); return (w.length > 4 && qNorm(w[0]) === "بسم") ? w.slice(4).join(" ") : text; }
+  function ayahBase(n) { var b = 0; for (var i = 0; i < n - 1; i++) b += SUR[i][2]; return b; }
+  function loadSurah(n) {
+    if (QCACHE[n]) return Promise.resolve(QCACHE[n]);
+    var local = QALL === null ? fetch("quran/quran.json").then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) { QALL = d; }).catch(function () { QALL = false; }) : Promise.resolve();
+    return local.then(function () {
+      if (QALL && QALL[n - 1]) return (QCACHE[n] = QALL[n - 1]);
+      try { var c = JSON.parse(localStorage.getItem("kpt_q_" + n) || "null"); if (c && c.length === SUR[n - 1][2]) return (QCACHE[n] = c); } catch (e) { }
+      return fetch("https://api.alquran.cloud/v1/surah/" + n + "/quran-uthmani").then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (j) {
+        var a = j.data.ayahs.map(function (x, i) { return i === 0 ? qStrip(n, x.text) : x.text; });
+        try { localStorage.setItem("kpt_q_" + n, JSON.stringify(a)); } catch (e) { }
+        return (QCACHE[n] = a);
+      });
+    });
+  }
+  function quranScreen() {
+    var h = '<div class="screen">' + header(t("quran")) + '<div style="height:14px"></div>' + streakCard(true);
+    if (S.qLast && SUR[S.qLast.s - 1]) {
+      var L0 = SUR[S.qLast.s - 1];
+      h += '<button class="qcont" data-act="openSurah" data-v="' + S.qLast.s + '" data-a="' + S.qLast.a + '"><span class="qi">' + I.quran + '</span><span class="qct"><small>' + t("continueReading") + "</small><b>" + L0[1] + " · " + t("ayahWord") + " " + S.qLast.a + '</b></span><span class="qar">' + L0[0] + "</span></button>";
+    }
+    h += '<div class="qsearch">' + sv('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>') + '<input id="qSearch" type="search" placeholder="' + t("searchSurah") + '" autocomplete="off"></div>';
+    h += '<div class="card qlist">' + SUR.map(function (x, i) {
+      return '<button class="qrow" data-act="openSurah" data-v="' + (i + 1) + '" data-q="' + (i + 1) + " " + x[1].toLowerCase() + " " + x[0] + '"><span class="qn">' + (i + 1) + '</span><span class="qt"><b>' + x[1] + "</b><small>" + t(x[3] === "M" ? "meccan" : "medinan") + " · " + x[2] + " " + t("ayahs") + '</small></span><span class="qar">' + x[0] + "</span></button>";
+    }).join("") + "</div>";
+    return h + '<p class="note">Quran text: Tanzil Project (tanzil.net) · Uthmani</p></div>';
+  }
+  function surahScreen() {
+    var n = UI.surah || 1, x = SUR[n - 1], playing = QA.audio && QA.n === n;
+    var h = '<div class="screen qread"><div class="qbar"><button class="iconbtn" data-act="tab" data-v="quran" data-list="1" aria-label="' + t("back") + '">' + I.left + "</button>" +
+      '<div class="qtitle"><b>' + x[0] + "</b><small>" + n + ". " + x[1] + " · " + x[2] + " " + t("ayahs") + "</small></div>" +
+      '<button class="iconbtn" data-act="qFont" data-v="-1" aria-label="' + t("fontSize") + '">A−</button><button class="iconbtn" data-act="qFont" data-v="1" aria-label="' + t("fontSize") + '">A+</button></div>';
+    h += '<div class="qhead"><div class="qsname">سُورَةُ ' + x[0] + "</div>" + (n !== 1 && n !== 9 ? '<div class="bism">' + BISM + "</div>" : "") + "</div>";
+    h += '<div class="qplayrow"><button class="btn qplay' + (playing ? " on" : "") + '" data-act="qPlay">' + (playing ? I.stop : I.play) + "<span>" + (playing ? t("stopListen") : t("listen")) + "</span></button>" +
+      '<button class="qrec" data-act="qReciter"><small>' + t("reciter") + '</small><b>' + reciter()[1] + "</b>" + I.down + "</button></div>";
+    h += '<div class="mushaf" id="qtext" style="font-size:' + (S.qfs || 1.8) + 'rem"><div class="qload">' + t("loadingQuran") + "</div></div>";
+    h += '<div class="qnav">' + (n > 1 ? '<button class="btn ghost" data-act="openSurah" data-v="' + (n - 1) + '">‹ ' + SUR[n - 2][1] + "</button>" : "<span></span>") +
+      (n < 114 ? '<button class="btn ghost" data-act="openSurah" data-v="' + (n + 1) + '">' + SUR[n][1] + " ›</button>" : "<span></span>") + "</div>";
+    return h + "</div>";
+  }
+  /* Mushaf features: sajdah ayahs, juz starts, waqf (pause) marks, rub el-hizb sign */
+  var SAJDA = { "7:206": 1, "13:15": 1, "16:50": 1, "17:109": 1, "19:58": 1, "22:18": 1, "22:77": 1, "25:60": 1, "27:26": 1, "32:15": 1, "38:24": 1, "41:38": 1, "53:62": 1, "84:21": 1, "96:19": 1 };
+  var JUZ = ["1:1", "2:142", "2:253", "3:93", "4:24", "4:148", "5:82", "6:111", "7:88", "8:41", "9:93", "11:6", "12:53", "15:1", "17:1", "18:75", "21:1", "23:1", "25:21", "27:56", "29:46", "33:31", "36:28", "39:32", "41:47", "46:1", "51:31", "58:1", "67:1", "78:1"];
+  function decorate(txt) {
+    return txt.replace(/([\u06D6-\u06DC])/g, '<span class="wq">$1</span>').replace(/۩/g, '<span class="sjm">۩</span>').replace(/۞/g, '<span class="rub">۞</span>');
+  }
+  function sajdaText(txt) {   // underline only the sajdah word: the word with the root س-ج-د, otherwise the last word of the ayah
+    var w = txt.split(" "), idx = [], i;
+    w.forEach(function (x, k) { if (qNorm(x).indexOf("سجد") >= 0) idx.push(k); });
+    if (!idx.length) { for (i = w.length - 1; i >= 0; i--) { if (/[\u0621-\u064A]/.test(qNorm(w[i]))) { idx.push(i); break; } } }
+    return w.map(function (x, k) { var d = decorate(x); return idx.indexOf(k) >= 0 ? '<span class="sjw">' + d + "</span>" : d; }).join(" ");
+  }
+  function quranFont() {   // make sure a full Quran font (all marks) is available
+    if (window.__qf) return; window.__qf = true;
+    try { if (document.fonts && document.fonts.check('16px "Amiri Quran"', "ٱ")) return; } catch (e) { }
+    fetch("https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap").then(function (r) { return r.text(); }).then(function (css) {
+      var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+    }).catch(function () { });
+  }
+  function fillSurah() {
+    quranFont();
+    var n = UI.surah || 1, el = $("#qtext"); if (!el) return;
+    loadSurah(n).then(function (a) {
+      if (UI.tab !== "surah" || UI.surah !== n || !$("#qtext")) return;
+      $("#qtext").innerHTML = a.map(function (txt, i) {
+        var key = n + ":" + (i + 1), jz = JUZ.indexOf(key), sj = SAJDA[key] || txt.indexOf("۩") >= 0;
+        return (jz > 0 ? '<span class="juz">الجزء ' + arNum(jz + 1) + "</span>" : "") +
+          '<span class="ay' + (sj ? " sajda" : "") + (S.qLast && S.qLast.s === n && S.qLast.a === i + 1 ? " mark" : "") + (QA.audio && QA.n === n && QA.i === i + 1 ? " playing" : "") + '" id="ay' + (i + 1) + '" data-act="ayah" data-v="' + (i + 1) + '">' +
+          (sj ? sajdaText(txt) : decorate(txt)) + ' <span class="am">﴿' + arNum(i + 1) + "﴾</span>" + (sj && txt.indexOf("۩") < 0 ? ' <span class="sjm">۩</span>' : "") + (sj ? '<span class="sjl">سَجْدَة</span>' : "") + "</span> ";
+      }).join("");
+      var ga = UI.goAyah; UI.goAyah = 0;
+      if (ga > 1) setTimeout(function () { var t0 = $("#ay" + ga); if (t0) t0.scrollIntoView({ block: "center" }); }, 60);
+    }).catch(function () { var e2 = $("#qtext"); if (e2) e2.innerHTML = '<div class="qload">' + t("quranOffline") + "</div>"; });
+  }
+  function hideAyahBar() { var b = $("#ayahbar"); if (b) b.remove(); }
+  function showAyahBar(a) {
+    hideAyahBar();
+    var bar = document.createElement("div"); bar.id = "ayahbar"; bar.className = "ayahbar";
+    bar.innerHTML = '<div class="abt"><b>' + t("ayahWord") + " " + a + '</b><small>' + reciter()[1] + "</small></div>" +
+      '<button data-act="ayOne" data-v="' + a + '">' + I.play + "<span>" + t("thisAyah") + "</span></button>" +
+      '<button data-act="ayFrom" data-v="' + a + '">' + I.play + I.play + "<span>" + t("fromHere") + '</span></button><button class="x" data-act="ayClose" aria-label="close">✕</button>';
+    document.body.appendChild(bar);
+  }
+  function qStop() { QA.token = null; if (QA.audio) { try { QA.audio.pause(); } catch (e) { } } QA.audio = null; var p = document.querySelector(".ay.playing"); if (p) p.classList.remove("playing"); }
+  function qPlayAyah(n, i, single) {
+    qStop(); hideAyahBar();
+    if (i > SUR[n - 1][2]) { render(); return; }
+    var el = $("#ay" + i); if (el) { el.classList.add("playing"); el.scrollIntoView({ block: "center", behavior: "smooth" }); }
+    if (reciter()[0] === "mp3q.nufais") { nufaisPlay(n, i, single); return; }
+    var token = {}; QA.n = n; QA.i = i; QA.token = token; QA.single = !!single; QA.audio = { pause: function () { } };
+    ayahAudio(n, i).then(function (urls) {
+      if (QA.token !== token) return;
+      urls = urls || []; var k = 0, au = new Audio(urls[0]); QA.audio = au;
+      au.onended = function () { if (QA.audio !== au) return; streakTick(20); if (QA.single) { qStop(); var b = $(".qplay"); if (b) render(); } else qPlayAyah(n, i + 1); };
+      au.onerror = function () { if (QA.audio !== au) return; if (++k < urls.length) { au.src = urls[k]; au.play().catch(function () { }); } else { qStop(); toast(t("quranOffline").split(".")[0]); render(); } };
+      au.play().catch(function () { });
+    });
+  }
+  function qSaveSpot() {
+    if (UI.tab !== "surah") return;
+    var list = document.querySelectorAll(".ay"), i;
+    for (i = 0; i < list.length; i++) { if (list[i].getBoundingClientRect().bottom > 120) { S.qLast = { s: UI.surah, a: +list[i].dataset.v }; return; } }
+  }
+  var qScrollT = null;
+  window.addEventListener("scroll", function () {
+    if (UI.tab !== "surah") return;
+    clearTimeout(qScrollT);
+    qScrollT = setTimeout(function () {
+      var list = document.querySelectorAll(".ay"), i;
+      for (i = 0; i < list.length; i++) { if (list[i].getBoundingClientRect().bottom > 120) { S.qLast = { s: UI.surah, a: +list[i].dataset.v }; save(true); break; } }
+    }, 600);
+  }, { passive: true });
 
   /* ---------------- Audio ---------------- */
   var PLAY = { id: null, audio: null, loading: false };
@@ -742,14 +1223,41 @@
         });
       }
       list.sort(function (a, b) { return a.schedule.at - b.schedule.at; });
-      list = list.slice(0, cap);
+      var mine = [], hl = hlogToday();
+      habits().forEach(function (x, hi) {
+        if (!x.time) return;
+        var tm = x.time.split(":"), mins = (+tm[0]) * 60 + (+tm[1] || 0);
+        for (var dd = 0; dd < 7; dd++) {
+          if (dd === 0 && (hl[x.id] || 0) >= (+x.target || 1)) continue;
+          var at = epoch(shift(todayO(), dd), mins); if (at <= now) continue;
+          mine.push({ id: 300000000 + hi * 10 + dd, title: "📿 " + x.name + ((+x.target || 1) > 1 ? " ×" + x.target : ""), body: x.ar || t("myDaily"),
+            schedule: { at: new Date(at), allowWhileIdle: true }, channelId: platform === "android" ? "reminder_" + CH : undefined, extra: { mode: "habit", id: x.id } });
+        }
+      });
+      evs().forEach(function (ev, ei) {
+        var r = nextOcc(ev); if (!r) return;
+        var hm = (ev.time || "08:00").split(":"), mins = (+hm[0]) * 60 + (+hm[1] || 0), yrs = evYears(ev, r.o), nm = ETYPES[ev.type] + " " + evLabel(ev) + " – " + ev.name;
+        var extra = ev.type === "death" ? " " + t("deathBody") : "";
+        var at = epoch(r.o, mins);
+        if (at > now) mine.push({ id: 200000000 + ei * 10, title: nm, body: t("todayEv") + (yrs ? " · " + fill(t(ev.type === "death" ? "yrsSince" : "yrsN"), { n: yrs }) : "") + extra,
+          schedule: { at: new Date(at), allowWhileIdle: true }, channelId: platform === "android" ? "reminder_" + CH : undefined, extra: { mode: "mydate", id: ev.id } });
+        if (+ev.before > 0) {
+          var o2 = shift(r.o, -ev.before), at2 = epoch(o2, mins);
+          if (at2 > now) mine.push({ id: 200000000 + ei * 10 + 1, title: nm, body: fill(t("inDays"), { n: ev.before }) + " · " + gDate(r.o, true) + extra,
+            schedule: { at: new Date(at2), allowWhileIdle: true }, channelId: platform === "android" ? "reminder_" + CH : undefined, extra: { mode: "mydate", id: ev.id } });
+        }
+      });
+      list = list.slice(0, Math.max(10, cap - mine.length));
       // Last alert: remind the user to open the app so the next weeks are scheduled.
       if (list.length) {
         var last = list[list.length - 1].schedule.at.getTime() + 30 * 60000;
         list.push({ id: 1, title: t("keepTitle"), body: t("keepBody"), schedule: { at: new Date(last), allowWhileIdle: true }, channelId: platform === "android" ? "reminder_" + CH : undefined, extra: { mode: "keep" } });
-        await LN.schedule({ notifications: list });
-      }
-    } catch (e) { console.warn("schedule failed", e); }
+        await LN.schedule({ notifications: list.concat(mine) });
+      } else if (mine.length) await LN.schedule({ notifications: mine });
+      var adh = list.filter(function (x) { return x.extra && (x.extra.mode === "adhan" || x.extra.mode === "notify"); });
+      UI.sched = { n: list.length, next: adh[0] ? { title: adh[0].title, at: adh[0].schedule.at } : null, err: null };
+      if (UI.tab === "setup") render();
+    } catch (e) { console.warn("schedule failed", e); UI.sched = { n: 0, next: null, err: String((e && e.message) || e) }; if (UI.tab === "setup") render(); }
   }
 
   /* ---------------- Android home-screen widget ---------------- */
@@ -779,7 +1287,7 @@
     x.fillStyle = "#ffffff"; x.fillRect(0, 0, W, H);
     var g = x.createLinearGradient(0, 0, W, headH); g.addColorStop(0, "#0A4D3A"); g.addColorStop(1, "#1556A8"); x.fillStyle = g; x.fillRect(0, 0, W, headH);
     x.fillStyle = "#ffffff"; x.font = "800 54px " + F; x.textBaseline = "alphabetic"; x.fillText(T.title, P, 104);
-    x.font = "500 34px " + F; x.globalAlpha = .9; x.fillText(T.sub + "  ·  Kerala Prayer Times", P, 162); x.globalAlpha = 1;
+    x.font = "500 34px " + F; x.globalAlpha = .9; x.fillText(T.sub + "  ·  Basmalah", P, 162); x.globalAlpha = 1;
     var first = cols > 4 ? 190 : 120, cw = (W - 2 * P - first) / (cols - 1);
     function cx(i) { return i === 0 ? P + 14 : P + first + cw * (i - 1) + cw / 2; }
     var y = headH; x.fillStyle = "#E7F0FB"; x.fillRect(0, y, W, colH); x.fillStyle = "#0A4D3A"; x.font = "700 28px " + F;
@@ -814,25 +1322,51 @@
   }
 
   /* ---------------- Location ---------------- */
-  async function getGps() {
-    toast(t("locating"));
+  var CITIES = [["Kuwait City", 29.37, 47.98], ["Jahra", 29.34, 47.66], ["Ahmadi", 29.08, 48.08], ["Fahaheel", 29.08, 48.13], ["Salmiya", 29.33, 48.08], ["Riyadh", 24.71, 46.68], ["Jeddah", 21.49, 39.19],
+    ["Makkah", 21.42, 39.83], ["Madinah", 24.47, 39.61], ["Dammam", 26.43, 50.1], ["Khobar", 26.28, 50.21], ["Jubail", 27.0, 49.66], ["Dubai", 25.2, 55.27], ["Abu Dhabi", 24.45, 54.38], ["Sharjah", 25.35, 55.42],
+    ["Ajman", 25.41, 55.44], ["Al Ain", 24.21, 55.74], ["Doha", 25.29, 51.53], ["Manama", 26.23, 50.59], ["Muscat", 23.59, 58.41], ["Salalah", 17.02, 54.09], ["Bengaluru", 12.97, 77.59], ["Chennai", 13.08, 80.27],
+    ["Mumbai", 19.08, 72.88], ["Mangaluru", 12.91, 74.86], ["Coimbatore", 11.02, 76.96], ["Kochi", 9.93, 76.27], ["Tirur", 10.91, 75.92], ["Manjeri", 11.12, 76.12], ["Perinthalmanna", 10.98, 76.23],
+    ["Vadakara", 11.6, 75.59], ["Thalassery", 11.75, 75.49], ["Ponnani", 10.77, 75.93], ["Kodungallur", 10.23, 76.2], ["Aluva", 10.11, 76.35], ["Kayamkulam", 9.17, 76.5], ["Nedumangad", 8.6, 77.0]];
+  function nearName(lat, lng) {
+    var best = null, bd = 1e9;
+    DIST.forEach(function (d) { var k = Math.hypot(d.lat - lat, (d.lng - lng) * Math.cos(lat * Math.PI / 180)) * 111; if (k < bd) { bd = k; best = L(d); } });
+    CITIES.forEach(function (c) { var k = Math.hypot(c[1] - lat, (c[2] - lng) * Math.cos(lat * Math.PI / 180)) * 111; if (k < bd) { bd = k; best = c[0]; } });
+    if (bd < 25) return best;
+    if (bd < 80) return t("near") + " " + best;
+    return Math.abs(lat).toFixed(2) + "°" + (lat >= 0 ? "N" : "S") + ", " + Math.abs(lng).toFixed(2) + "°" + (lng >= 0 ? "E" : "W");
+  }
+  function reverseName(lat, lng) {
+    // Town name from BigDataCloud's free client-side service; position rounded to ~1 km.
+    var u = "https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + lat.toFixed(2) + "&longitude=" + lng.toFixed(2) + "&localityLanguage=" + (S.lang === "ml" ? "ml" : "en");
+    return fetch(u).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (j) {
+      var town = j.city || j.locality || "", region = j.principalSubdivision || j.countryName || "";
+      return town ? town + (region && region !== town ? ", " + region : "") : region;
+    });
+  }
+  async function getGps(quiet) {
+    UI.locating = true; if (UI.tab === "home") render(); else if (!quiet) toast(t("locating"));
     try {
       var pos;
       if (GEO) {
         try { await GEO.requestPermissions(); } catch (e) { }
-        pos = await GEO.getCurrentPosition({ enableHighAccuracy: true, timeout: 15000 });
+        pos = await GEO.getCurrentPosition({ enableHighAccuracy: !quiet, timeout: 15000, maximumAge: 300000 });
       } else {
-        pos = await new Promise(function (res, rej) { navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 15000, maximumAge: 600000 }); });
+        pos = await new Promise(function (res, rej) { navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: !quiet, timeout: 15000, maximumAge: 300000 }); });
       }
-      S.gps = [pos.coords.latitude, pos.coords.longitude]; S.district = -1; UI.sheet = null; UI.view = null;
-      save(); render(); askNotif();
-    } catch (e) { toast(t("gpsFail")); }
+      var lat = pos.coords.latitude, lng = pos.coords.longitude;
+      S.gps = [lat, lng]; S.district = -1; S.gpsAt = Date.now(); S.gpsName = nearName(lat, lng); UI.sheet = null; UI.view = null; UI.firstRun = false; UI.locating = false;
+      save(); render();
+      reverseName(lat, lng).then(function (n) { if (n && S.gps && S.gps[0] === lat) { S.gpsName = n; save(true); render(); } }).catch(function () { });
+      if (!quiet) askNotif();
+    } catch (e) { UI.locating = false; render(); if (!quiet) toast(t("gpsFail")); }
   }
 
   /* ---------------- Events ---------------- */
   var ACT = {
     tab: function (el) {
-      UI.tab = el.dataset.v; UI.sheet = null; if (UI.tab !== "times") UI.view = null;
+      UI.tab = el.dataset.v; UI.sheet = null; if (UI.tab !== "times") UI.view = null; hideAyahBar();
+      if (UI.tab === "quran" && !el.dataset.list && S.qLast && SUR[S.qLast.s - 1]) { UI.tab = "surah"; UI.surah = S.qLast.s; UI.goAyah = S.qLast.a; }
+      if (UI.tab !== S.lastTab) { S.lastTab = UI.tab; save(true); }
       render(); window.scrollTo(0, 0);
       if (UI.tab === "qibla") startCompass();               // compass starts by itself
       if (UI.tab === "setup") { refreshBattery().then(function () { reschedule(); if (UI.tab === "setup") render(); }); }
@@ -851,14 +1385,14 @@
       var c = $("#tbCount"); if (c) { c.textContent = b.count; $("#tbRounds").textContent = b.rounds; $("#tbTotal").textContent = b.total; $("#tbRing").setAttribute("stroke-dashoffset", tbOffset().toFixed(1)); }
       tbSave();
     },
-    hcTap: function () {
-      var info = nextInfo(), st = hcState(info), cur = HC[st.step]; if (!cur) return;
+    hcTap: function (el) {
+      var info = el.dataset.v, st = hcState(info), cur = HC[st.step]; if (!cur) return;
       st.count++;
       if (st.count >= cur.n) { st.step++; st.count = 0; try { if (navigator.vibrate) navigator.vibrate([40, 50, 40]); else haptic(); } catch (e) { } if (st.step >= HC.length) toast("✓ " + t("done")); }
       else haptic();
       $("#hc").innerHTML = hcInner(st, info); tbSave();
     },
-    hcReset: function () { var info = nextInfo(), st = hcState(info); st.step = 0; st.count = 0; $("#hc").innerHTML = hcInner(st, info); tbSave(); },
+    hcReset: function (el) { var info = el.dataset.v, st = hcState(info); st.step = 0; st.count = 0; $("#hc").innerHTML = hcInner(st, info); tbSave(); },
     tbDhikr: function (el) { S.tb.i = +el.dataset.v; S.tb.count = 0; save(true); render(); },
     tbTarget: function (el) { S.tb.target = +el.dataset.v; S.tb.count = 0; save(true); render(); },
     tbReset: function () { S.tb.count = 0; S.tb.rounds = 0; S.tb.total = 0; save(true); render(); },
@@ -868,7 +1402,8 @@
       try { var r = await KN.pinWidget(); if (!r || !r.ok) toast(t("widgetHelp")); } catch (e) { toast(t("widgetHelp")); }
     },
     recheck: async function () { await refreshBattery(); await doSchedule(); render(); },
-    openDistrict: function () { UI.sheet = "district"; render(); },
+    openDistrict: function () { UI.sheet = "district"; UI.locKerala = undefined; render(); },
+    locKerala: function () { var gps = S.district === -1; UI.locKerala = !(UI.locKerala !== undefined ? UI.locKerala : !gps); render(); },
     closeSheet: function () { UI.sheet = null; stopSound(); render(); },
     pickDistrict: function (el) {
       var first = S.district === null; S.district = +el.dataset.v; UI.sheet = null; UI.view = null; UI.firstRun = false;
@@ -911,11 +1446,94 @@
     fixExact: function () { if (LN && LN.changeExactNotificationSetting) LN.changeExactNotificationSetting().catch(function () { }); },
     startCompass: function () { startCompass(); },
     dkP: function (el) { UI.dkPrayer = el.dataset.v; render(); },
+    closeCelebrate: function () { var c = $(".celebrate"); if (c) c.remove(); },
+    openSurah: function (el) {
+      var n = +el.dataset.v; if (UI.surah !== n) qStop(); hideAyahBar();
+      UI.surah = n; UI.goAyah = +(el.dataset.a || 0); UI.tab = "surah"; S.lastTab = "surah";
+      if (!S.qLast || S.qLast.s !== n) { S.qLast = { s: n, a: UI.goAyah || 1 }; save(true); }
+      render(); if (!UI.goAyah) window.scrollTo(0, 0);
+    },
+    ayah: function (el) {
+      var a = +el.dataset.v; S.qLast = { s: UI.surah, a: a }; save(true);
+      var m = document.querySelector(".ay.mark"); if (m) m.classList.remove("mark"); el.classList.add("mark"); haptic();
+      showAyahBar(a);
+    },
+    ayOne: function (el) { stopSound(); qPlayAyah(UI.surah, +el.dataset.v, true); },
+    ayFrom: function (el) { stopSound(); qPlayAyah(UI.surah, +el.dataset.v); var b = $(".qplay"); if (b) { b.classList.add("on"); b.innerHTML = I.stop + "<span>" + t("stopListen") + "</span>"; } },
+    ayClose: function () { hideAyahBar(); },
+    qPlay: function () {
+      if (QA.audio && QA.n === UI.surah) { qStop(); render(); return; }
+      var start = S.qLast && S.qLast.s === UI.surah ? S.qLast.a : 1; stopSound(); qPlayAyah(UI.surah, start); render();
+      setTimeout(function () { var el = $("#ay" + QA.i); if (el) el.classList.add("playing"); }, 300);
+    },
+    qReciter: function () { UI.sheet = "reciter"; render(); },
+    newHabit: function () { UI.sheet = "habit:"; render(); },
+    editHabit: function (el) { UI.sheet = "habit:" + el.dataset.v; render(); },
+    habitPreset: function (el) {
+      var p = PRESETS[+el.dataset.v]; $("#hbName").value = L(p.n); $("#hbAr").value = p.ar || ""; $("#hbCount").value = p.c; $("#hbTime").value = p.t || "";
+      document.querySelectorAll(".presets button").forEach(function (b) { b.classList.toggle("on", b === el); });
+    },
+    saveHabit: function (el) {
+      var name = ($("#hbName").value || "").trim(); if (!name) { toast(t("evNeedName")); $("#hbName").focus(); return; }
+      var id = el.dataset.v || ("h" + Date.now().toString(36)), x = { id: id, name: name, ar: ($("#hbAr").value || "").trim(), target: Math.max(1, Math.min(10000, parseInt($("#hbCount").value, 10) || 1)), time: $("#hbTime").value || "" };
+      var L0 = habits(), i = L0.map(function (e) { return e.id; }).indexOf(id); if (i >= 0) L0[i] = x; else L0.push(x);
+      UI.sheet = null; save(); render(); toast("✓ " + t("saved"));
+    },
+    delHabit: function (el) { if (!window.confirm(t("delConfirm"))) return; S.habits = habits().filter(function (e) { return e.id !== el.dataset.v; }); UI.sheet = null; save(); render(); },
+    resetHabit: function (el) { hlogToday()[el.dataset.v] = 0; UI.sheet = null; save(); render(); },
+    habitTap: function (el) {
+      var id = el.dataset.v, x = habits().filter(function (e) { return e.id === id; })[0]; if (!x) return;
+      var log = hlogToday(), n = +x.target || 1, c = log[id] || 0;
+      if (c >= n) { if (n === 1) { log[id] = 0; save(true); render(); } return; }
+      log[id] = c + 1; haptic();
+      if (c + 1 >= n) {
+        try { if (navigator.vibrate) navigator.vibrate([40, 60, 40]); } catch (e) { }
+        toast("✓ " + x.name + " – " + t("done") + " · MashaAllah");
+        save(); render();   // reschedules: today's reminder for a finished item is skipped
+        var all = habits().every(function (e) { return (log[e.id] || 0) >= (+e.target || 1); });
+        if (all) celebrateDaily();
+        return;
+      }
+      var row = $("#hb_" + id); if (row) row.outerHTML = habitRow(x);
+      tbSave();
+    },
+    goDates: function () { UI.prevTab2 = UI.tab === "dates" ? UI.prevTab2 : UI.tab; UI.tab = "dates"; UI.sheet = null; render(); window.scrollTo(0, 0); },
+    newEvent: function () { UI.sheet = "event:"; render(); },
+    editEvent: function (el) { UI.sheet = "event:" + el.dataset.v; render(); },
+    evType: function (el) {
+      UI.evType = el.dataset.v; document.querySelectorAll(".etypes button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === UI.evType); });
+      if (UI.evType === "death") { var c = $("#evCal"); if (c && !UI.calTouched) { c.value = "h"; $("#evHij").textContent = evPreview($("#evDate").value, "h"); } }
+    },
+    saveEvent: function (el) {
+      var name = ($("#evName").value || "").trim(), date = $("#evDate").value;
+      if (!name) { toast(t("evNeedName")); $("#evName").focus(); return; }
+      if (!date) { toast(t("evNeedDate")); return; }
+      var id = el.dataset.v || ("e" + Date.now().toString(36)), cal = $("#evCal").value, g = fromIso(date), h = hParts(g);
+      var ev = { id: id, name: name, type: UI.evType || "other", date: date, cal: cal, hm: h.m, hd: h.d, hy: h.y, noYear: $("#evNoYear").checked,
+        before: +$("#evBefore").value, time: $("#evTime").value || "08:00" };
+      var L0 = evs(), i = L0.map(function (e) { return e.id; }).indexOf(id); if (i >= 0) L0[i] = ev; else L0.push(ev);
+      UI.sheet = null; UI.calTouched = false; save(); render(); toast("✓ " + t("saved"));
+    },
+    delEvent: function (el) {
+      if (!window.confirm(t("delConfirm"))) return;
+      S.events = evs().filter(function (e) { return e.id !== el.dataset.v; }); UI.sheet = null; save(); render();
+    },
+    rTab: function (el) { UI.rtab = el.dataset.v; render(); },
+    aDua: function (el) { UI.sheet = "adua:" + el.dataset.v; render(); },
+    pickReciter: function (el) {
+      var was = QA.audio && QA.n === UI.surah, at = QA.i; S.qr = el.dataset.v; save(true); UI.sheet = null; toast("✓ " + reciter()[2]);
+      if (was) { qStop(); render(); qPlayAyah(UI.surah, at); } else render();
+    },
+    qFont: function (el) {
+      S.qfs = Math.max(1.2, Math.min(3, Math.round(((S.qfs || 1.8) + 0.2 * (+el.dataset.v)) * 10) / 10)); save(true);
+      var q = $("#qtext"); if (q) q.style.fontSize = S.qfs + "rem";
+    },
+    openPrayer: function (el) { UI.prevTab = UI.tab === "adhkar" ? UI.prevTab : UI.tab; UI.dkPrayer = el.dataset.v; UI.tab = "adhkar"; UI.sheet = null; render(); window.scrollTo(0, 0); },
     count: function (el) {
       var key = UI.dkPrayer + ":" + el.dataset.v, need = +el.dataset.n, c = UI.counts[key] || 0;
       if (c >= need) return; UI.counts[key] = c + 1; haptic();
       var card = el.closest(".dk");
-      if (c + 1 >= need) { card.classList.add("done"); el.textContent = "✓ " + t("done"); if (navigator.vibrate) navigator.vibrate([20, 40, 20]); }
+      if (c + 1 >= need) { card.classList.add("done"); el.textContent = "✓"; if (navigator.vibrate) navigator.vibrate([20, 40, 20]); }
       else el.textContent = (c + 1) + " / " + need;
     },
     resetOne: function (el) { UI.counts[UI.dkPrayer + ":" + el.dataset.v] = 0; render(); }
@@ -924,9 +1542,17 @@
     var el = ev.target.closest("[data-act]"); if (!el) return;
     var fn = ACT[el.dataset.act]; if (fn) fn(el, ev);
   });
+  document.addEventListener("input", function (ev) {
+    if (ev.target.id !== "qSearch") return;
+    var q = ev.target.value.trim().toLowerCase();
+    document.querySelectorAll(".qrow").forEach(function (r) { r.style.display = !q || r.dataset.q.indexOf(q) >= 0 ? "" : "none"; });
+  });
   document.addEventListener("change", function (ev) {
     var el = ev.target;
     if (el.id === "datepick" && el.value) { UI.view = fromIso(el.value); render(); return; }
+    if (el.id && el.id.indexOf("hb") === 0) return;
+    if (el.id === "evDate" || el.id === "evCal") { if (el.id === "evCal") UI.calTouched = true; var p = $("#evHij"); if (p) p.textContent = evPreview($("#evDate").value, $("#evCal").value); return; }
+    if (el.id === "evNoYear" || el.id === "evBefore" || el.id === "evTime" || el.id === "evName") return;
     if (el.id === "distSel") {
       UI.firstRun = false;
       if (el.value === "gps") { getGps(); render(); return; }
@@ -944,6 +1570,7 @@
   function tick() {
     if (!S || S.district === null) return;
     var w = $("#wcd"); if (w) { var inf = nextInfo(); w.textContent = cdText(inf.left); }
+    if (UI.tab === "surah" && !document.hidden && !UI.sheet) streakTick(1);
     if (UI.tab !== "home") return;
     var info = nextInfo(), cd = $("#cd");
     var mn = Math.floor(info.now.secs / 60);
@@ -961,15 +1588,18 @@
   async function start() {
     await load();
     render();
-    if (UI.firstRun) { save(true); if (isNative) setTimeout(askNotif, 1200); }
+    if (UI.firstRun) { save(true); setTimeout(function () { getGps(true); }, 400); if (isNative) setTimeout(askNotif, 4000); }
+    else if (S.district === -1 && (!S.gpsAt || Date.now() - S.gpsAt > 6 * 3600000)) setTimeout(function () { getGps(true); }, 800);
     setInterval(tick, 1000);
     checkSounds();
     if (SB) { try { SB.setBackgroundColor({ color: "#0A4D3A" }); SB.setStyle({ style: "DARK" }); } catch (e) { } }
     if (APP) APP.addListener("appStateChange", function (s) {
-      if (s.isActive) { UI.view = null; refreshBattery().then(function () { render(); reschedule(); }); } else stopCompass();
+      if (s.isActive) { UI.view = null; refreshBattery().then(function () { if (UI.tab !== "surah") render(); reschedule(); }); } else { stopCompass(); qSaveSpot(); save(true); }
     });
     refreshBattery();
     if (UI.tab === "qibla") startCompass();
+    if (S.lastTab === "surah" && S.qLast && SUR[S.qLast.s - 1] && !location.search) { UI.tab = "surah"; UI.surah = S.qLast.s; UI.goAyah = S.qLast.a; render(); }
+    document.addEventListener("visibilitychange", function () { if (document.hidden) { qSaveSpot(); save(true); } });
     if (LN) {
       LN.addListener("localNotificationReceived", function (n) { if (n.extra && n.extra.mode === "adhan") adhanOverlay(n.extra.k); });
       LN.addListener("localNotificationActionPerformed", function () {

@@ -1,12 +1,13 @@
 @font-face{font-family:"Manjari";src:local("Manjari"),url(../fonts/Manjari-Regular.ttf) format("truetype");font-weight:400;font-display:swap}
 @font-face{font-family:"Manjari";src:local("Manjari Bold"),url(../fonts/Manjari-Bold.ttf) format("truetype");font-weight:700 900;font-display:swap}
 @font-face{font-family:"Amiri";src:local("Amiri"),url(../fonts/Amiri-Regular.ttf) format("truetype");font-display:swap}
+@font-face{font-family:"Amiri Quran";src:local("Amiri Quran"),url(../fonts/AmiriQuran-Regular.ttf) format("truetype");font-display:swap}
 :root{
   --bg:#F3F6F4;--card:#FFFFFF;--ink:#10241F;--muted:#62756F;--line:#E3EAE7;--soft:#EAF4F0;
   --p:#0A5240;--p2:#0E6B53;--gold:#1F6FE0;--gold2:#E3EEFD;--blue:#1556A8;--danger:#C0392B;
   --shadow:0 6px 20px rgba(10,40,32,.08);--r:20px;
   --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
-  --ar:"Amiri","Noto Naskh Arabic","Geeza Pro","Traditional Arabic",serif;
+  --qr:"Amiri Quran","Amiri","Noto Naskh Arabic",serif;--ar:"Amiri","Noto Naskh Arabic","Geeza Pro","Traditional Arabic",serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#08130F;--card:#11201B;--ink:#E8F2EE;--muted:#93A9A1;--line:#1E322B;--soft:#16302A;--p:#2BB38D;--p2:#127A60;--gold:#5AA2FF;--gold2:#14263C;--shadow:0 6px 20px rgba(0,0,0,.35)}}
 [data-theme="dark"]{
@@ -377,7 +378,6 @@ table.month tr.ev td.d{color:var(--gold)}
 .sound .sn small.cr{color:var(--muted)}
 
 /* ---------- v2.3: background picture, adhan choice ---------- */
-.hero2.img{background:linear-gradient(180deg,rgba(4,20,40,.55) 0%,rgba(4,20,40,.25) 45%,rgba(4,30,24,.15) 75%,rgba(4,30,24,.45) 100%),url(../img/home-bg.jpg) center 62%/cover no-repeat}
 .hero2.img::after{display:none}
 .hero2.img .greet,.hero2.img .dates,.hero2.img .nname,.hero2.img .cd{text-shadow:0 2px 10px rgba(0,0,0,.35)}
 .hero2.img{padding-bottom:150px}
@@ -391,12 +391,9 @@ table.month tr.ev td.d{color:var(--gold)}
 .srow .sl .pslink{display:flex}
 .spin{width:16px;height:16px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;animation:spin .8s linear infinite;display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
-.hero2.img.bg-kerala{background:linear-gradient(180deg,rgba(4,20,50,.45) 0%,rgba(4,20,50,.25) 50%,rgba(4,30,24,.1) 75%,rgba(4,30,24,.45) 100%),url(../img/home-bg-kerala.jpg) center bottom/cover no-repeat}
 .hero2.img.bg-kerala{padding-bottom:200px}
 
 /* ---------- v2.4: welcome page wallpaper, golden sunrise ---------- */
-.hero2.img.bg-sunrise{padding-bottom:200px;background:linear-gradient(180deg,rgba(4,18,48,.5) 0%,rgba(4,18,48,.22) 45%,rgba(4,18,48,0) 70%,rgba(4,30,24,.35) 100%),url(../img/home-bg-sunrise.jpg) center bottom/cover no-repeat}
-.onb{position:relative;background:#071A2C url(../img/welcome-bg.jpg) center top/cover no-repeat fixed;isolation:isolate}
 .onb::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:linear-gradient(180deg,rgba(3,14,40,.55) 0%,rgba(3,14,40,.15) 30%,rgba(3,14,40,.05) 42%,rgba(3,20,30,.55) 62%,rgba(3,20,30,.78) 100%)}
 .onb .logo{box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 0 3px rgba(255,255,255,.25)}
@@ -408,12 +405,8 @@ table.month tr.ev td.d{color:var(--gold)}
 .onb .langsw{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background:rgba(0,0,0,.25)}
 
 /* ---------- v2.5: calm blue-hour wallpaper (readable text) ---------- */
-.hero2.img.bg-bluehour{padding-bottom:200px;background:linear-gradient(180deg,rgba(4,12,30,.25) 0%,rgba(4,12,30,0) 50%,rgba(4,20,30,.3) 100%),url(../img/home-bg-bluehour.jpg) center bottom/cover no-repeat}
-.hero2.img.bg-sunrise{background:linear-gradient(180deg,rgba(4,14,40,.78) 0%,rgba(4,14,40,.62) 40%,rgba(4,14,40,.25) 62%,rgba(4,30,24,.35) 100%),url(../img/home-bg-sunrise.jpg) center bottom/cover no-repeat}
-.hero2.img.bg-kerala{background:linear-gradient(180deg,rgba(4,14,40,.7) 0%,rgba(4,14,40,.5) 45%,rgba(4,14,40,.15) 70%,rgba(4,30,24,.4) 100%),url(../img/home-bg-kerala.jpg) center bottom/cover no-repeat}
 .hero2.img .cd{background:rgba(4,14,40,.38);border:1px solid rgba(255,255,255,.18)}
 .hero2.img .greet,.hero2.img .dates,.hero2.img .hijri,.hero2.img .nlbl,.hero2.img .nname,.hero2.img .nat,.hero2.img .cdbox small{text-shadow:0 1px 3px rgba(0,0,0,.6),0 2px 14px rgba(0,0,0,.45)}
-.onb{background:#06142A url(../img/welcome-bg.jpg) center top/cover no-repeat fixed}
 .onb::before{background:linear-gradient(180deg,rgba(3,10,28,.2) 0%,rgba(3,10,28,0) 40%,rgba(3,10,28,0) 66%,rgba(3,12,24,.45) 80%,rgba(3,12,24,.7) 100%)}
 .onb .gpsbtn{margin-top:max(24px,calc(72vh - 200px))}
 .onb .dbtn{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.22)}
@@ -455,3 +448,319 @@ table.month tr.ev td.d{color:var(--gold)}
 .dsel select{appearance:none;-webkit-appearance:none;background:transparent;border:0;color:#fff;font-weight:700;font-size:.98rem;padding:0 2px;max-width:56vw;cursor:pointer;outline:none}
 .dsel select option{color:#10241F;background:#fff}
 .dhint{margin-top:10px}
+
+/* ================= v3.0 ================= */
+/* Home: full-page pattern background with frosted-glass cards */
+.homebg{position:fixed;inset:0;z-index:0;pointer-events:none;background:#062B33 url(../img/home-pattern.jpg) center top/cover no-repeat}
+.homebg.bg-sky{background:linear-gradient(165deg,#06382C 0%,#0A4A52 45%,#0B2A5C 100%)}
+#app.glassy .screen{position:relative;z-index:1}
+#app.glassy{color:#fff}
+.home3{color:#fff}
+.hero3{padding:calc(14px + var(--safe-t)) 18px 8px}
+.hero3 .hrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.hero3 .iconbtn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
+.locchip{display:inline-flex;align-items:center;gap:7px;max-width:76%;height:40px;padding:0 6px 0 12px;border-radius:999px;color:#fff;font-weight:700;font-size:.95rem;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.locchip>svg{width:16px;height:16px;flex:none;color:#9FE3C7}
+.locchip>span:nth-child(2){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.locchip .rf{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.14);flex:none}
+.locchip .rf svg{width:14px;height:14px}
+.spin2 svg{animation:spin 1s linear infinite}
+.hero3 .dhint{margin-top:8px;font-size:.78rem;color:#CDEFE0}
+.salam{font-family:var(--ar);font-size:2.1rem;line-height:1.5;text-align:center;margin-top:14px;color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.35)}
+.hero3 .dates{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:.92rem;font-weight:600;opacity:.95}
+.hero3 .dates .hj{color:#BFE9D8;font-weight:500;font-size:.84rem}
+.glass{background:rgba(255,255,255,.09)!important;border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);box-shadow:0 10px 30px rgba(0,0,0,.18)!important;color:#fff}
+.hero3 .nxt{position:relative;display:grid;grid-template-columns:1fr auto;align-items:end;gap:10px;margin-top:16px;padding:16px 16px 14px;border-radius:22px}
+.hero3 .nlbl{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+.hero3 .nname{font-size:2.2rem;font-weight:800;line-height:1.05}
+.hero3 .nat{opacity:.85;font-size:.9rem}
+.hero3 .cdbox{text-align:right}
+.hero3 .cd{font-size:1.8rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.hero3 .cdbox small{display:block;font-size:.7rem;opacity:.75;margin-top:4px}
+.hero3 .daybar{grid-column:1/-1;margin-top:12px}
+.card.times3{margin-top:12px}
+.glassy .prow{border-bottom-color:rgba(255,255,255,.1);cursor:pointer}
+.glassy .prow .pi{background:rgba(255,255,255,.12);color:#9FE3C7}
+.glassy .prow .pn small{color:rgba(255,255,255,.65)}
+.glassy .prow .bell{color:rgba(255,255,255,.55)}.glassy .prow .bell.on{color:#9FE3C7}
+.glassy .prow.cur{background:linear-gradient(90deg,rgba(31,163,131,.35),rgba(31,111,224,.15))}
+.glassy .prow.cur .pt,.glassy .prow.cur .pn b{color:#fff}
+.glassy .prow.cur::before{background:#5AA2FF}
+.glassy .prow.sun .pt,.glassy .prow.sun .pn b{color:rgba(255,255,255,.6)}
+.glassy .adhanbar{background:rgba(255,255,255,.06);border-top-color:rgba(255,255,255,.12)}
+.glassy .adhanbar .at small{color:rgba(255,255,255,.65)}.glassy .adhanbar .chg{color:#9CC8FF}
+.glassy .sec h2{color:#fff}.glassy .sec .link{color:#9FE3C7}
+.quick.q5{grid-template-columns:repeat(5,1fr);margin:14px 10px 4px}
+.glassy .quick button{color:#fff}
+.glassy .quick .qi{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 6px 16px rgba(0,0,0,.18);color:#BDF2DC}
+.glassy .hc{border-radius:20px}
+.glassy .hc-tap{background:rgba(255,255,255,.1)}.glassy .hc-tap .bgc{stroke:rgba(255,255,255,.15)}.glassy .hc-tap b{color:#fff}.glassy .hc-tap small{color:rgba(255,255,255,.7)}
+.glassy .hc-ar{color:#fff}.glassy .hc-steps span{background:rgba(255,255,255,.18)}.glassy .hc-steps span.ok{background:#9FE3C7}
+.glassy .hc-rst{background:rgba(255,255,255,.1);color:#fff}.glassy .hc-done{color:#9FE3C7}
+.duaday.glass{background:rgba(255,255,255,.09)!important}
+.duaday.glass::before{display:none}
+.duaday .ar{text-align:center!important;font-size:1.6rem}
+.glassy .card:not(.glass){background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);color:#fff}
+.glassy .evrow{border-bottom-color:rgba(255,255,255,.1)}.glassy .evn small{color:rgba(255,255,255,.65)}
+.glassy .evd{background:rgba(255,255,255,.12);color:#BDF2DC}.glassy .evin{color:#9FE3C7}
+.glassy .rmcard{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.glassy .banner{background:rgba(255,255,255,.14);color:#fff}
+.glassy .tabbar{background:rgba(4,30,36,.72);border-top-color:rgba(255,255,255,.12)}
+.glassy .tab{color:rgba(255,255,255,.6)}.glassy .tab.on{color:#fff}.glassy .tab.on .tbg{background:rgba(255,255,255,.14)}
+
+/* Prayer page (adhkar) – Arabic only */
+.phead{display:flex;align-items:center;gap:12px;margin:2px 16px 12px;padding:12px 14px;border-radius:18px;background:linear-gradient(135deg,#0A5240,#14508F);color:#fff;box-shadow:var(--shadow)}
+.phead .pi{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.15);display:grid;place-items:center}
+.phead .pi svg{width:22px;height:22px}
+.phead .par{font-family:var(--ar);font-size:1.6rem;line-height:1.3}
+.phead small{opacity:.85}
+.dk.ar-only .ar{font-size:1.65rem;line-height:2.2;text-align:center!important}
+.dk.ar-only .counter{justify-content:center}
+.dk .times{font-weight:800;color:var(--gold);min-width:42px;text-align:center}
+.dk .rst{display:grid;place-items:center;width:46px}
+.dk .rst svg{width:18px;height:18px}
+.dk.empty{text-align:center;color:var(--muted);font-size:.9rem}
+.pchips button.arb{font-family:var(--ar);font-size:1.05rem;padding:6px 16px}
+
+/* Qibla extras */
+.qwarn{margin:0 16px 8px;padding:10px 14px;border-radius:14px;background:#FFF4D6;color:#7A5200;text-align:center;font-weight:600;font-size:.88rem}
+[data-theme="dark"] .qwarn{background:#3A2F12;color:#F5D68A}
+.qacc{text-align:center;color:var(--muted);font-size:.78rem;margin:0 16px 10px}
+.compass.aligned .dial svg circle:first-child{stroke:#1FA383;stroke-width:6}
+.compass.aligned{filter:drop-shadow(0 0 18px rgba(31,163,131,.45))}
+
+/* Quran */
+.qcont{display:flex;align-items:center;gap:12px;width:calc(100% - 32px);margin:0 16px 12px;padding:14px;border-radius:20px;color:#fff;text-align:left;background:linear-gradient(135deg,#0A5240,#14508F);box-shadow:var(--shadow)}
+.qcont .qi{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.15);display:grid;place-items:center;flex:none}
+.qcont .qi svg{width:22px;height:22px}
+.qcont .qct{flex:1;min-width:0}.qcont .qct small{display:block;opacity:.8;font-size:.75rem}.qcont .qct b{font-size:1rem}
+.qcont .qar{font-family:var(--ar);font-size:1.5rem}
+.qsearch{display:flex;align-items:center;gap:8px;margin:0 16px 12px;padding:0 14px;height:46px;border-radius:14px;background:var(--card);box-shadow:var(--shadow);color:var(--muted)}
+.qsearch svg{width:18px;height:18px;flex:none}
+.qsearch input{flex:1;border:0;background:transparent;outline:none;font-size:1rem;color:var(--ink);height:100%}
+.qrow{display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;border-bottom:1px solid var(--line);text-align:left}
+.qrow:last-child{border-bottom:0}
+.qn{width:36px;height:36px;flex:none;display:grid;place-items:center;font-weight:800;font-size:.85rem;color:var(--p);background:var(--soft);border-radius:10px;transform:rotate(45deg)}
+.qn{transform:none;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%)}
+.qt{flex:1;min-width:0}.qt b{display:block;font-size:.98rem}.qt small{color:var(--muted);font-size:.76rem}
+.qrow .qar{font-family:var(--ar);font-size:1.35rem;color:var(--p)}
+.qread{background:var(--bg)}
+.qbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;padding:calc(10px + var(--safe-t)) 12px 10px;background:linear-gradient(135deg,#0A5240,#14508F);color:#fff}
+.qbar .iconbtn{background:rgba(255,255,255,.14);color:#fff;font-weight:800;font-size:.85rem;width:40px;height:40px}
+.qtitle{flex:1;min-width:0;text-align:center}.qtitle b{display:block;font-family:var(--ar);font-size:1.3rem;line-height:1.3;font-weight:400}.qtitle small{opacity:.8;font-size:.74rem}
+.qhead{margin:16px 16px 6px;padding:16px 10px;border-radius:20px;text-align:center;background:var(--card);box-shadow:var(--shadow);border:1px solid var(--line)}
+.qsname{font-family:var(--ar);font-size:1.7rem;color:var(--p)}
+.bism{font-family:var(--qr,var(--ar));font-size:1.6rem;margin-top:6px;line-height:2}
+.btn.qplay{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px}
+.btn.qplay svg{width:16px;height:16px}
+.btn.qplay.on{background:#C0392B}
+.mushaf{margin:8px 16px 0;padding:18px 16px;border-radius:20px;background:var(--card);box-shadow:var(--shadow);font-family:var(--qr,var(--ar));direction:rtl;text-align:justify;line-height:2.25;color:var(--ink)}
+.mushaf .ay{cursor:pointer;border-radius:8px;transition:background .2s}
+.mushaf .ay.mark{background:rgba(31,111,224,.12)}
+.mushaf .ay.playing{background:rgba(31,163,131,.22)}
+.mushaf .am{color:var(--p);font-size:.8em;white-space:nowrap}
+.qload{text-align:center;color:var(--muted);font-family:inherit;direction:ltr;font-size:1rem;padding:30px 0}
+.qnav{display:flex;justify-content:space-between;gap:10px;margin:14px 16px 0}
+.qnav .btn{width:auto;margin:0;flex:1;font-size:.88rem}
+.qnav span{flex:1}
+/* Location sheet: My location / Kerala */
+.locopt{display:flex;flex-direction:column;gap:10px;margin:0 16px 12px}
+.lo{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border-radius:18px;background:var(--card);box-shadow:var(--shadow);border:2px solid transparent;text-align:left}
+.lo.sel{border-color:var(--p)}
+.lo .loi{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#0A5240,#1556A8);flex:none}
+.lo .loi svg{width:20px;height:20px}
+.lo .lot{flex:1;min-width:0}.lo .lot b{display:block}.lo .lot small{color:var(--muted);font-size:.8rem}
+.lo .rad{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none}
+.lo.sel .rad{border-color:var(--p)}.lo.sel .rad::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--p)}
+.lo .chev{color:var(--muted);transition:transform .2s;display:grid}.lo .chev svg{width:20px;height:20px}.lo .chev.up{transform:rotate(180deg)}
+.sheet{color:var(--ink)}
+.glassy .sheet .lo .lot b{color:var(--ink)}
+
+/* ================= v3.1 ================= */
+/* Light home theme (default): green-blue header band, white cards */
+#app.homelight .hero3{position:relative;overflow:hidden;color:#fff;border-radius:0 0 32px 32px;padding-bottom:20px;
+  background:linear-gradient(150deg,#0A5240 0%,#0E6B63 48%,#1556A8 100%);box-shadow:0 10px 30px rgba(10,60,80,.25)}
+#app.homelight .hero3::before{content:"";position:absolute;inset:0;opacity:.08;pointer-events:none;
+  background-image:radial-gradient(circle at 14px 14px,#fff 1.5px,transparent 2px);background-size:26px 26px}
+#app.homelight .hero3::after{content:"";position:absolute;right:-70px;top:-80px;width:260px;height:260px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(156,200,255,.35),transparent 65%)}
+#app.homelight .hero3>*{position:relative;z-index:1}
+#app.homelight .hero3 .nxt.glass{background:rgba(255,255,255,.14)!important}
+#app.homelight .home3 .card.glass,#app.homelight .home3 .hc.glass{background:var(--card)!important;color:var(--ink);border:1px solid var(--line);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:var(--shadow)!important}
+#app.homelight .home3 .duaday.glass{background:linear-gradient(145deg,#0A5240,#14508F)!important;color:#fff;border:0}
+#app.homelight .quick .qi{background:linear-gradient(145deg,var(--p),#1556A8);color:#fff}
+#app.homelight .quick button{color:var(--ink)}
+.bg-night{background:radial-gradient(1.2px 1.2px at 30px 40px,#fff,transparent),radial-gradient(1px 1px at 120px 90px,#fff,transparent),radial-gradient(1.4px 1.4px at 220px 30px,#fff,transparent),radial-gradient(1px 1px at 330px 120px,#fff,transparent),linear-gradient(170deg,#050B1A 0%,#0A1F3D 55%,#06302A 100%)!important;background-size:380px 200px,380px 200px,380px 200px,380px 200px,cover!important}
+.prow .go{width:18px;display:grid;place-items:center;color:var(--muted);margin-left:-6px}
+.prow .go svg{width:16px;height:16px}
+.glassy .prow .go{color:rgba(255,255,255,.5)}
+.prow[data-act]:active{background:var(--soft)}
+
+/* Duas */
+.dk.long .ar{font-size:1.45rem;line-height:2.3;text-align:justify!important;text-align-last:center}
+.dk .dkt{font-size:.8rem;color:var(--gold);font-weight:700;text-align:center;margin-bottom:6px}
+
+/* Quran reciter */
+.qplayrow{display:flex;gap:10px;margin:12px 16px 0}
+.qplayrow .btn.qplay{flex:1;width:auto;margin:0}
+.qrec{flex:1.2;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;position:relative;padding:8px 34px 8px 14px;border-radius:16px;background:var(--card);box-shadow:var(--shadow);border:1px solid var(--line);text-align:left}
+.qrec small{color:var(--muted);font-size:.7rem}.qrec b{font-family:var(--ar);font-size:1.05rem;font-weight:400;color:var(--p);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.qrec svg{position:absolute;right:10px;top:50%;width:18px;height:18px;margin-top:-9px;color:var(--muted)}
+.sound .sn b.rar{font-family:var(--ar);font-weight:400;font-size:1.15rem}
+
+/* Quran streak */
+.streak{margin:0 16px 12px;padding:14px;border-radius:20px;background:linear-gradient(135deg,#FFF6E5,#FDEBD3);border:1px solid #F5D9AE;color:#5A3B10;box-shadow:var(--shadow);cursor:pointer}
+[data-theme="dark"] .streak{background:linear-gradient(135deg,#3A2A12,#2B1F0E);border-color:#5A4320;color:#F5DFB8}
+.glassy .streak{background:rgba(255,200,120,.14);border-color:rgba(255,210,150,.3);color:#FFE7C2;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.sk-top{display:flex;align-items:center;gap:10px}
+.fire{font-size:1.9rem;filter:grayscale(1) opacity(.45);transition:filter .3s}
+.fire.on{filter:none;animation:flick 1.6s ease-in-out infinite}
+@keyframes flick{0%,100%{transform:scale(1) rotate(-2deg)}50%{transform:scale(1.08) rotate(2deg)}}
+.sk-n{display:flex;flex-direction:column;align-items:center;line-height:1}
+.sk-n b{font-size:1.9rem;font-weight:800}.sk-n small{font-size:.7rem;opacity:.8}
+.sk-t{flex:1;min-width:0}.sk-t b{display:block;font-size:.95rem}.sk-t small{font-size:.76rem;opacity:.85}
+.sk-next{display:flex;flex-direction:column;align-items:center}.sk-next span{font-size:1.6rem;filter:grayscale(.6) opacity(.7)}.sk-next small{font-size:.68rem;opacity:.8;white-space:nowrap}
+.sk-bar{height:6px;border-radius:6px;background:rgba(0,0,0,.08);margin-top:10px;overflow:hidden}
+.sk-bar span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#F59E0B,#EF4444)}
+.garden{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px}
+.gf{display:flex;flex-direction:column;align-items:center;padding:6px 0;border-radius:12px;background:rgba(0,0,0,.05)}
+.gf span{font-size:1.35rem;filter:grayscale(1) opacity(.3)}.gf small{font-size:.62rem;opacity:.6}
+.gf.ok{background:rgba(255,255,255,.7)}.gf.ok span{filter:none}.gf.ok small{opacity:1;font-weight:700}
+[data-theme="dark"] .gf.ok{background:rgba(255,255,255,.1)}
+.sk-best{margin-top:8px;font-size:.75rem;opacity:.75;text-align:center}
+.celebrate{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:rgba(4,20,30,.55);backdrop-filter:blur(3px);overflow:hidden}
+.celebrate .petal{position:absolute;top:-40px;animation:fall 3.2s linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.2}}
+.cbox{position:relative;width:min(84vw,320px);padding:26px 20px;border-radius:26px;background:#fff;color:#10241F;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.cbig{font-size:4.5rem;line-height:1;animation:bloom 1.2s ease-out}
+@keyframes bloom{0%{transform:scale(.2) rotate(-40deg)}70%{transform:scale(1.15) rotate(8deg)}100%{transform:none}}
+.cnum{font-size:1.6rem;font-weight:800;color:#0A5240;margin-top:8px}
+.cmsg{margin:6px 0 16px;color:#4A5D57;line-height:1.5}
+.cbox button{background:linear-gradient(135deg,#0A5240,#1556A8);color:#fff;padding:12px 40px;border-radius:999px;font-weight:800}
+#app.homelight .home3{color:var(--ink)}
+#app.homelight .home3 .hero3{color:#fff}
+#app.homelight .home3 .sec h2{color:var(--ink)}
+#app.homelight .home3 .sec .link{color:var(--p)}
+
+/* ================= v3.2 ================= */
+.mushaf{font-family:"Amiri Quran",var(--qr,var(--ar))}
+.mushaf .wq{color:#C0392B;font-size:.9em}
+.mushaf .rub{color:var(--gold);font-size:1.05em}
+.mushaf .sjm{color:#C0392B;font-weight:700}
+.mushaf .ay.sajda{text-decoration:underline;text-decoration-color:#C0392B;text-decoration-thickness:2px;text-underline-offset:10px}
+.mushaf .sjl{display:inline-block;margin:0 6px;padding:0 8px;border-radius:8px;background:#C0392B;color:#fff;font-family:var(--ar);font-size:.55em;line-height:1.7;vertical-align:middle;text-decoration:none}
+.mushaf .juz{display:block;margin:14px 0 6px;text-align:center;font-family:var(--ar);font-size:.62em;color:var(--p);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:2px 0}
+.ayahbar{position:fixed;left:10px;right:10px;bottom:calc(76px + var(--safe-b));z-index:45;max-width:540px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:10px 10px 10px 14px;border-radius:18px;background:linear-gradient(135deg,#0A5240,#14508F);color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.3);animation:up .2s ease}
+.ayahbar .abt{flex:1;min-width:0}.ayahbar .abt b{display:block;font-size:.9rem}.ayahbar .abt small{font-family:var(--ar);opacity:.85}
+.ayahbar button{display:inline-flex;align-items:center;gap:4px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.16);font-size:.78rem;font-weight:700;color:#fff}
+.ayahbar button svg{width:12px;height:12px}
+.ayahbar button.x{background:none;font-size:1rem;padding:6px}
+.adpills{display:flex;gap:6px;padding:10px 12px 12px;flex-wrap:wrap;border-top:1px solid var(--line)}
+.adpills button{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;background:var(--soft);color:var(--p);font-size:.76rem;font-weight:700}
+.adpills button svg{width:13px;height:13px}
+.glassy .adpills{border-top-color:rgba(255,255,255,.12)}.glassy .adpills button{background:rgba(255,255,255,.12);color:#fff}
+.adtabs{display:flex;gap:6px;margin:0 16px 12px;flex-wrap:wrap}
+.adtabs button{padding:8px 12px;border-radius:999px;background:var(--card);box-shadow:var(--shadow);font-size:.82rem;font-weight:700;color:var(--ink)}
+.adtabs button.on{background:var(--p);color:#fff}
+.addesc{margin:0 20px 8px;color:var(--gold);font-weight:700;font-size:.85rem;text-align:center}
+.adtext{margin:0 16px;padding:18px;border-radius:20px;background:var(--card);box-shadow:var(--shadow);font-family:var(--ar);direction:rtl;text-align:center;font-size:1.5rem;line-height:2.2;color:var(--ink)}
+.mushaf .ay.sajda{text-decoration:none}
+.mushaf .sjw{text-decoration:underline;text-decoration-color:#C0392B;text-decoration-thickness:2px;text-underline-offset:9px}
+/* Ramadan duas */
+.dk.rdua .ar{font-size:1.4rem;line-height:2.2;text-align:center!important}
+.dk.rdua .dkt{font-size:.85rem}
+.dk.rdua .mlx{margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--soft);font-size:.92rem;line-height:1.6;text-align:center}
+.dk.rdua.now{outline:2px solid var(--gold)}
+/* Quran reader: white page */
+.qread,#app .qread{background:#fff}
+.qread .mushaf,.qread .qhead{background:#fff;color:#10241F;box-shadow:none;border:1px solid #E8ECEA}
+body:has(.qread),html:has(.qread){background:#fff}
+
+/* ================= v3.4: My dates ================= */
+.evd.my{display:grid;place-items:center;background:#FDF0E2}.evd.my span{font-size:1.5rem}
+.t-death .evd.my{background:#E9EEF5}
+.evrow.mine{cursor:pointer}
+.addrow{display:block;width:100%;padding:12px 16px;border-top:1px solid var(--line);color:var(--p);font-weight:700;font-size:.88rem;text-align:center}
+.glassy .addrow{color:#9FE3C7;border-top-color:rgba(255,255,255,.12)}
+.btn.addev{margin-bottom:14px}
+.hday.mine::before{content:"";position:absolute;top:5px;left:6px;width:6px;height:6px;border-radius:50%;background:#E67E22}
+.evform{margin:0 16px;display:flex;flex-direction:column;gap:12px}
+.evform label{display:flex;flex-direction:column;gap:6px;font-size:.82rem;font-weight:700;color:var(--muted)}
+.evform input[type=text],.evform input[type=date],.evform input[type=time],.evform select{height:46px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:1rem;font-weight:500;color:var(--ink)}
+.evform label.chk{flex-direction:row;align-items:center;gap:8px;font-weight:500;color:var(--ink)}
+.evform label.chk input{width:20px;height:20px}
+.evform .row2{display:grid;grid-template-columns:1.4fr 1fr;gap:10px}
+.evhint{margin-top:-6px;font-size:.8rem;color:var(--p);font-weight:600}
+.etypes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.etypes button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:14px;background:var(--card);border:2px solid var(--line);font-size:.68rem;font-weight:700;line-height:1.2;text-align:center}
+.etypes button span{font-size:1.4rem}
+.etypes button.on{border-color:var(--p);background:var(--soft);color:var(--p)}
+.evform .btn{margin:4px 0 0;width:100%}
+.btn.ghost.danger{color:#C0392B}
+/* Home reminders card */
+.mdempty{display:flex;align-items:center;gap:12px;width:calc(100% - 32px);margin:0 16px 12px;padding:14px;border-radius:20px;border:2px dashed #E9C9A3;background:#FFF9F2;text-align:left;color:#5A3B10}
+.mdempty .ic{font-size:1.2rem;letter-spacing:2px}.mdempty b{display:block}.mdempty small{opacity:.8;font-size:.78rem}
+.mdempty span:nth-child(2){flex:1}.mdempty .plus{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#E67E22;color:#fff;font-weight:800}
+.glassy .mdempty{background:rgba(255,255,255,.08);border-color:rgba(255,220,180,.35);color:#FFE7C2}
+
+/* v3.4 header: deep teal → royal blue with gold accents */
+#app.homelight .hero3{background:radial-gradient(120% 90% at 100% 0%,rgba(212,175,95,.28) 0%,transparent 45%),linear-gradient(160deg,#04332E 0%,#075E54 38%,#0B4F8A 78%,#14306E 100%)}
+#app.homelight .hero3::before{opacity:.1;background-image:radial-gradient(circle at 14px 14px,#F3D58A 1.3px,transparent 1.8px);background-size:28px 28px}
+#app.homelight .hero3::after{background:radial-gradient(circle,rgba(243,213,138,.35),transparent 65%)}
+#app.homelight .hero3 .salam{color:#F6E2A8;text-shadow:0 2px 18px rgba(0,0,0,.35)}
+#app.homelight .hero3 .dates span:first-child{color:#fff}
+#app.homelight .hero3 .dates .hj{color:#F3D58A}
+#app.homelight .hero3 .locchip{background:rgba(255,255,255,.1);border-color:rgba(243,213,138,.45)}
+#app.homelight .hero3 .locchip>svg{color:#F3D58A}
+#app.homelight .hero3 .iconbtn{border-color:rgba(243,213,138,.35)}
+#app.homelight .hero3 .nxt.glass{background:rgba(255,255,255,.1)!important;border-color:rgba(243,213,138,.35)}
+#app.homelight .hero3 .nlbl{color:#F3D58A;opacity:1}
+#app.homelight .hero3 .daybar .fill{background:linear-gradient(90deg,rgba(243,213,138,.4),#F3D58A)}
+#app.homelight .hero3 .daybar .dot.done{background:#F3D58A}
+.aboutmsg{margin:0 16px 14px;padding:20px 18px;border-radius:22px;text-align:center;color:#fff;background:radial-gradient(120% 90% at 100% 0%,rgba(212,175,95,.28),transparent 50%),linear-gradient(160deg,#04332E,#075E54 45%,#0B4F8A);box-shadow:var(--shadow)}
+.am-bism{font-family:var(--ar);font-size:1.4rem;color:#F6E2A8;margin-bottom:10px}
+.am-ml{font-size:1rem;line-height:1.75;font-weight:600}
+.am-en{margin-top:8px;font-size:.84rem;line-height:1.5;opacity:.85}
+.am-by{margin-top:14px;padding-top:12px;border-top:1px solid rgba(243,213,138,.35);color:#F3D58A;font-weight:800;letter-spacing:.02em}
+
+/* v3.5: inner page headers + About area in the new teal–royal blue–gold theme */
+.hdr{background:radial-gradient(120% 90% at 100% 0%,rgba(212,175,95,.28) 0%,transparent 45%),linear-gradient(160deg,#04332E 0%,#075E54 38%,#0B4F8A 78%,#14306E 100%)}
+.hdr .pattern{opacity:.1;background-image:radial-gradient(circle at 14px 14px,#F3D58A 1.3px,transparent 1.8px);background-size:28px 28px}
+.hdr::after{background:radial-gradient(circle,rgba(243,213,138,.3),transparent 65%)}
+.hdr .chip{border:1px solid rgba(243,213,138,.45)}
+.hdr .chip svg:first-child{color:#F3D58A}
+.hdr .iconbtn{border:1px solid rgba(243,213,138,.35)}
+.aboutwrap{margin:6px 0 0;padding:18px 0 24px;background:linear-gradient(180deg,transparent 0%,#EAF3EF 18%,#E6EEF8 100%)}
+[data-theme="dark"] .aboutwrap{background:linear-gradient(180deg,transparent 0%,#0C1D1A 18%,#0B1626 100%)}
+.aboutwrap .sgt{color:#075E54}
+.aboutwrap .sgrp{background:rgba(255,255,255,.75);border:1px solid rgba(7,94,84,.12)}
+[data-theme="dark"] .aboutwrap .sgrp{background:rgba(255,255,255,.05)}
+.aboutmsg{box-shadow:0 14px 34px rgba(7,60,80,.28)}
+
+/* ================= v3.6: My daily list ================= */
+.hb-cnt{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--soft);color:var(--p);font-size:.75rem;vertical-align:2px}
+.hbcard{padding:4px 0}
+.hb{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 16px;border-bottom:1px solid var(--line)}
+.hb:last-child{border-bottom:0}
+.hb-main{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px}
+.hb-main b{font-size:.98rem}
+.hb-ar{font-family:var(--ar);font-size:1.05rem;color:var(--p);direction:rtl;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:stretch;text-align:right}
+.hb-main small{color:var(--muted);font-size:.76rem}
+.hb-bar{display:block;align-self:stretch;height:5px;border-radius:5px;background:var(--line);overflow:hidden;margin-top:4px}
+.hb-bar i{display:block;height:100%;background:linear-gradient(90deg,#0B8F6A,#1F6FE0);border-radius:5px;transition:width .2s}
+.hb-tap{width:62px;height:62px;flex:none;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;color:#fff;background:linear-gradient(145deg,#075E54,#0B4F8A);box-shadow:0 6px 14px rgba(7,60,80,.25);touch-action:manipulation}
+.hb-tap:active{transform:scale(.94)}
+.hb-tap small{font-size:.66rem;font-weight:700;opacity:.85}
+.hb.done .hb-tap{background:#E2F5EC;color:#0A7A50;box-shadow:none}
+.hb.done .hb-main b{text-decoration:line-through;text-decoration-color:rgba(10,122,80,.5);color:var(--muted)}
+.hb.done .hb-bar i{background:#1FA383}
+.hb-all{margin:8px 12px 4px;padding:8px;border-radius:12px;background:#E2F5EC;color:#0A7A50;font-weight:800;text-align:center;font-size:.88rem}
+.mdempty.daily{border-color:#A8D8C5;background:#F1FAF6;color:#0A5240}
+.mdempty.daily .plus{background:#0B8F6A}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button{padding:7px 11px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:.78rem;font-weight:700;color:var(--ink)}
+.presets button.on{background:var(--p);color:#fff;border-color:var(--p)}
+.evform textarea{padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-family:var(--ar);font-size:1.1rem;color:var(--ink);resize:vertical}
+.evform input[type=number]{height:46px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:1rem;color:var(--ink)}
+[data-theme="dark"] .hb.done .hb-tap,[data-theme="dark"] .hb-all{background:#12352A;color:#5FD3A6}

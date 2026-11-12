@@ -1,7 +1,7 @@
 {
-  "name": "kerala-prayer-times",
-  "version": "2.9.0",
-  "description": "Kerala Prayer Times - accurate namaz times, adhan, Qibla and adhkar for Android and iPhone",
+  "name": "basmalah",
+  "version": "3.4.0",
+  "description": "Basmalah - accurate namaz times, adhan, Qibla and adhkar for Android and iPhone",
   "private": true,
   "scripts": {
     "setup:native": "node scripts/native-setup.mjs",
@@ -11,7 +11,10 @@
     "ios": "npx cap open ios",
     "serve": "npx http-server www -p 8080 -c-1",
     "fonts": "node scripts/get-fonts.mjs",
-    "adhans": "node scripts/get-adhans.mjs"
+    "adhans": "node scripts/get-adhans.mjs",
+    "declination": "node scripts/make-declination.mjs",
+    "quran": "node scripts/get-quran.mjs",
+    "bundle": "node scripts/bundle-native.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.0",
@@ -30,6 +33,7 @@
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.0.0",
-    "xcode": "^3.0.1"
+    "xcode": "^3.0.1",
+    "esbuild": "^0.25.0"
   }
 }

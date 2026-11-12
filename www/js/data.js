@@ -33,13 +33,16 @@
       { id: "madinah", en: "Madinah – Masjid an-Nabawi", ml: "മദീന – മസ്ജിദുന്നബവി", credit: "ejaz215 · CC BY 3.0", src: "33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg" },
       { id: "azeez", en: "Aaqib Azeez – calm adhan", ml: "അഖിബ് അസീസ് – ശാന്തമായ ബാങ്ക്", credit: "Atcovi · CC BY-SA 4.0", src: "The Adhan - Muslim Call to Prayer - Aaqib Azeez.mp3" },
       { id: "short", en: "Short adhan (27 seconds)", ml: "ചെറിയ ബാങ്ക് (27 സെക്കൻഡ്)", credit: "Jarih · CC BY-SA 3.0", src: "Adhan wiki.oga" },
+      { id: "makkah_maghrib", en: "Makkah – Maghrib at the Haram", ml: "മക്ക – ഹറമിലെ മഗ്‌രിബ് ബാങ്ക്", credit: "3omar Faruq · CC BY 3.0", src: "Maghrib Adhan at the Masjid al Haram, Mecca - 25 Feb, 2012.webm" },
+      { id: "istanbul", en: "Istanbul – Turkish style", ml: "ഇസ്താംബൂൾ – തുർക്കി ശൈലി", credit: "Viceskeeni2 · CC0", src: "Adhan in Istanbul.webm" },
+      { id: "kazakh", en: "Central Asian style – Shalkar", ml: "മധ്യേഷ്യൻ ശൈലി – ഷാൽകർ", credit: "Esetok · CC BY-SA 4.0", src: "Adhan in Shalqar mosque.webm" },
       { id: "fajr_malmo", en: "Fajr adhan – Besim Azemi", ml: "സുബ്ഹ് ബാങ്ക് – ബസീം അസീമി", fajr: true, credit: "Islamic Center Malmö · CC BY 3.0", src: "Eid al-Fitr Fajr azan at Malmö Mosque - 19 August 2012.webm" },
       { id: "chime", en: "Soft chime (built-in)", ml: "മൃദുവായ മണിനാദം (ഇൻ-ബിൽറ്റ്)", builtin: true },
       { id: "default", en: "Phone default sound", ml: "ഫോണിന്റെ സാധാരണ ശബ്ദം", system: true }
     ],
     T: {
       en: {
-        appName: "Kerala Prayer Times", welcome: "Assalamu Alaikum", welcomeSub: "Choose your district to get accurate prayer times", chooseDistrict: "Select your district",
+        appName: "Basmalah", welcome: "السَّلَامُ عَلَيْكُمْ", welcomeSub: "Choose your district to get accurate prayer times", chooseDistrict: "Select your district",
         useGps: "Use my exact location (GPS)", locating: "Finding your location…", gpsFail: "Couldn't get your location. Please allow location access.", myLocation: "My location",
         next: "Next prayer", in: "in", now: "Now", tomorrow: "Tomorrow", today: "Today", yesterday: "Yesterday",
         home: "Home", times: "Times", qibla: "Qibla", adhkar: "Adhkar", settings: "Settings",
@@ -53,13 +56,13 @@
         notInstalled: "Not installed", play: "Play", stop: "Stop", testAdhan: "Test adhan now",
         calcSection: "Calculation", method: "Method", asr: "Asr method", shafi: "Shafi'i (standard)", hanafi: "Hanafi", adjust: "Adjust minutes (to match your masjid)",
         hijriAdj: "Hijri date adjustment", days: "days", generalSection: "General", language: "Language", timeFormat: "Time format", theme: "Theme",
-        themeAuto: "Automatic", themeLight: "Light", themeDark: "Dark", location: "Location", changeDistrict: "Change district",
+        themeAuto: "Automatic", themeLight: "Light", themeDark: "Dark", location: "Location", changeDistrict: "Change location",
         about: "About", aboutText: "Kerala standard calculation (Fajr & Isha 18°, Shafi'i Asr, IST). Matches the published Kerala timetable for district headquarters. Local masjid times may differ by a minute or two — use the minute adjustment to match.",
         notifOff: "Notifications are off. Tap to allow so the adhan can play.", allow: "Allow", saved: "Saved", adhanPlaying: "Adhan", stopAdhan: "Stop",
         exactOff: "Exact alarms are off – adhan may be late. Tap to fix.", reviewNote: "Please confirm wording and practice with your local scholar (Usthad)."
       },
       ml: {
-        appName: "നിസ്കാര സമയം", welcome: "അസ്സലാമു അലൈക്കും", welcomeSub: "കൃത്യമായ നിസ്കാര സമയത്തിന് നിങ്ങളുടെ ജില്ല തിരഞ്ഞെടുക്കുക", chooseDistrict: "ജില്ല തിരഞ്ഞെടുക്കുക",
+        appName: "ബസ്മല", welcome: "السَّلَامُ عَلَيْكُمْ", welcomeSub: "കൃത്യമായ നിസ്കാര സമയത്തിന് നിങ്ങളുടെ ജില്ല തിരഞ്ഞെടുക്കുക", chooseDistrict: "ജില്ല തിരഞ്ഞെടുക്കുക",
         useGps: "എന്റെ കൃത്യമായ സ്ഥലം (GPS)", locating: "സ്ഥലം കണ്ടെത്തുന്നു…", gpsFail: "സ്ഥലം ലഭിച്ചില്ല. ലൊക്കേഷൻ അനുമതി നൽകുക.", myLocation: "എന്റെ സ്ഥലം",
         next: "അടുത്ത നിസ്കാരം", in: "ഇനി", now: "ഇപ്പോൾ", tomorrow: "നാളെ", today: "ഇന്ന്", yesterday: "ഇന്നലെ",
         home: "ഹോം", times: "സമയങ്ങൾ", qibla: "ഖിബ്‌ല", adhkar: "ദിക്റുകൾ", settings: "ക്രമീകരണം",
@@ -73,7 +76,7 @@
         notInstalled: "ഇൻസ്റ്റാൾ ചെയ്തിട്ടില്ല", play: "കേൾക്കുക", stop: "നിർത്തുക", testAdhan: "ബാങ്ക് ഇപ്പോൾ പരീക്ഷിക്കുക",
         calcSection: "കണക്കുകൂട്ടൽ", method: "രീതി", asr: "അസ്ർ രീതി", shafi: "ശാഫിഈ (സാധാരണ)", hanafi: "ഹനഫി", adjust: "മിനിറ്റ് ക്രമീകരിക്കുക (നിങ്ങളുടെ പള്ളിയുമായി ഒത്തുനോക്കാൻ)",
         hijriAdj: "ഹിജ്റ തീയതി ക്രമീകരണം", days: "ദിവസം", generalSection: "പൊതുവായവ", language: "ഭാഷ", timeFormat: "സമയ ഫോർമാറ്റ്", theme: "തീം",
-        themeAuto: "ഓട്ടോമാറ്റിക്", themeLight: "ലൈറ്റ്", themeDark: "ഡാർക്ക്", location: "സ്ഥലം", changeDistrict: "ജില്ല മാറ്റുക",
+        themeAuto: "ഓട്ടോമാറ്റിക്", themeLight: "ലൈറ്റ്", themeDark: "ഡാർക്ക്", location: "സ്ഥലം", changeDistrict: "സ്ഥലം മാറ്റുക",
         about: "വിവരം", aboutText: "കേരള സ്റ്റാൻഡേർഡ് കണക്ക് (സുബ്ഹ്, ഇശാ 18°, ശാഫിഈ അസ്ർ, IST). ജില്ലാ ആസ്ഥാനങ്ങളുടെ പ്രസിദ്ധീകരിച്ച കേരള സമയപ്പട്ടികയുമായി ഒത്തുപോകുന്നു. പ്രാദേശിക പള്ളി സമയങ്ങളിൽ ഒന്നോ രണ്ടോ മിനിറ്റ് വ്യത്യാസമുണ്ടാകാം.",
         notifOff: "അറിയിപ്പുകൾ ഓഫാണ്. ബാങ്ക് കേൾക്കാൻ അനുമതി നൽകുക.", allow: "അനുവദിക്കുക", saved: "സേവ് ചെയ്തു", adhanPlaying: "ബാങ്ക്", stopAdhan: "നിർത്തുക",
         exactOff: "കൃത്യ അലാറം ഓഫാണ് – ബാങ്ക് വൈകിയേക്കാം. ശരിയാക്കാൻ തൊടുക.", reviewNote: "പദങ്ങളും രീതിയും നിങ്ങളുടെ ഉസ്താദുമായി ഉറപ്പുവരുത്തുക."

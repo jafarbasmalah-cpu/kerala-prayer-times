@@ -11,6 +11,9 @@ const LIST = [
   ["madinah", "33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg"],
   ["azeez", "The Adhan - Muslim Call to Prayer - Aaqib Azeez.mp3"],
   ["short", "Adhan wiki.oga"],
+  ["makkah_maghrib", "Maghrib Adhan at the Masjid al Haram, Mecca - 25 Feb, 2012.webm"],
+  ["istanbul", "Adhan in Istanbul.webm"],
+  ["kazakh", "Adhan in Shalqar mosque.webm"],
   ["fajr_malmo", "Eid al-Fitr Fajr azan at Malmö Mosque - 19 August 2012.webm"]
 ];
 const have = fs.readdirSync(dir).map((f) => path.basename(f, path.extname(f)).toLowerCase());

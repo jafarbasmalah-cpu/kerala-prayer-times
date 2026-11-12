@@ -1,4 +1,4 @@
-# Kerala Prayer Times – Android & iPhone app (v2.1)
+# Basmalah – Kerala prayer times app for Android & iPhone (v3.4)
 
 One code base (Capacitor 8) for Android and iPhone. Dark green and blue design, English and Malayalam.
 
@@ -74,3 +74,41 @@ The build finds where the muezzin starts (skipping crowd noise or silence at the
 
 ## Content
 Adhkar and Malayalam meanings should be reviewed by a local scholar (Usthad) before publishing. Hijri dates are calculated (Umm al-Qura); Kerala follows local moon sighting – users can shift the Hijri date ±2 days in Settings.
+
+## New in v3.0
+* Home: Arabic salam, abstract emerald-sapphire background with glass cards, shortcuts Qibla · Adhkar · Tasbih · Quran · Ramadan.
+* Location: **My location** (GPS, shows your town name) or **Kerala** with the 14 districts.
+* Tap a prayer to open its page: after-prayer adhkar (Arabic only) with counters, the after-prayer tasbih, and that prayer's duas.
+* **Adding your duas:** edit `www/js/duas.js` and put the Arabic text under each prayer, e.g. `fajr: [ { ar: "…" }, { ar: "…", count: 3 } ]`.
+* Quran: all 114 surahs (Uthmani text from Tanzil, bundled at build time), search, continue reading, text size, recitation by Mishary Alafasy (streamed, needs internet).
+* Qibla: corrected from magnetic to true north (World Magnetic Model), smoother needle, calibration and "hold flat" warnings, accuracy shown.
+* 8 adhans: added Makkah Maghrib, Istanbul and Central Asian (Shalkar) recordings.
+
+## New in v3.1
+* **Adhan fix:** the phone plugins (notifications, GPS, storage…) are now bundled into `www/js/native.js` during the build. Before this the notification module could fail to load, so no adhan was scheduled. Settings › Adhan reliability check now shows "Adhan alerts scheduled" with the next alert.
+* Your ICF duas for Fajr, Dhuhr, Asr, Maghrib and Isha, plus the adhan / iqamah duas, on each prayer page.
+* Tapping a prayer on the Times page or home page opens its adhkar and duas.
+* 16 Quran reciters (Sudais, Shuraim, Maher Al-Muaiqly, Abdul Basit, Husary, Ajamy, Hudhaify…).
+* Quran streak: read or listen for one minute a day; rewards at 3, 7, 10 (flower), 15, 21, 30, 40, 50, 75, 100, 150, 200 and 365 days.
+* New light home theme (Settings › Home background: Light, Night or Pattern). Sunrise now shows its Malayalam and Arabic name.
+
+## New in v3.2
+* Hijri page: upcoming special days shown above the calendar.
+* Home: quick buttons for the adhan / between adhan & iqamah / iqamah duas.
+* Quran reopens at the exact surah and ayah you left, even after closing the app.
+* Reciter Ahmad Al-Nufais (MP3Quran.net, whole-surah audio with ayah timings).
+* Tap any ayah → "This ayah" (plays only that ayah) or "From here".
+* Mushaf marks: sajdah ayahs underlined with ۩ and a "سجدة" label, juz headings, waqf signs highlighted, full Amiri Quran font.
+
+## New in v3.3
+* Ramadan page: "Duas & dhikr" tab with the Ramadan handbook duas (new moon, fasting niyyah, after every prayer, the three tens – current ten highlighted, Laylat al-Qadr, Tarawih niyyah and dhikr, after Tarawih and Witr). Timetable in the second tab.
+* Quran reader on a white background; only the sajdah word is underlined.
+
+## New in v3.4
+* App renamed to **Basmalah** (Android/iPhone app name, widget, store texts, privacy policy).
+* Reminders: birthdays, wedding anniversaries, death anniversaries (Hijri or English date), yearly notification on the day and/or 1–7 days before. Shown on the home page and in the Hijri calendar.
+* New home header colours: deep teal to royal blue with gold accents.
+
+## New in v3.6
+* Home: "My daily list" – add your own prayers, duas and dhikr (name, optional Arabic text, count such as 100 Swalath, optional daily reminder time). Tap +1 to count; shows Done when complete; resets every day; flower celebration when the whole list is done. Quick presets: Swalath, Istighfar, Yasin, Al-Mulk, Al-Waqi'ah, Duha, Tahajjud, morning/evening adhkar.
+* About message shortened.

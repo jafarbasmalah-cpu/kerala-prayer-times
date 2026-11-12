@@ -5,7 +5,7 @@ import path from "node:path";
 const dir = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..", "www", "fonts");
 fs.mkdirSync(dir, { recursive: true });
 const base = "https://raw.githubusercontent.com/google/fonts/main/ofl/";
-const files = ["manjari/Manjari-Regular.ttf", "manjari/Manjari-Bold.ttf", "amiri/Amiri-Regular.ttf"];
+const files = ["manjari/Manjari-Regular.ttf", "manjari/Manjari-Bold.ttf", "amiri/Amiri-Regular.ttf", "amiriquran/AmiriQuran-Regular.ttf"];
 for (const f of files) {
   const out = path.join(dir, path.basename(f));
   if (fs.existsSync(out)) { console.log("• have " + path.basename(f)); continue; }

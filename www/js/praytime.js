@@ -1,4 +1,4 @@
-/* Kerala Prayer Times - astronomical engine (PrayTimes-style algorithm).
+/* Basmalah - astronomical engine (PrayTimes-style algorithm).
    Verified to match the published Kerala (Suprabhatham) timetable to the minute
    with Karachi angles 18°/18°, Shafi'i Asr and no extra minutes. */
 (function (G) {

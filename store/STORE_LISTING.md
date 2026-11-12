@@ -1,15 +1,15 @@
-# Google Play listing – Kerala Prayer Times
+# Google Play listing – Basmalah
 
 Copy these texts into **Google Play Console › Grow › Store presence › Main store listing**.
 
 ## App name (max 30)
-Kerala Prayer Times
+Basmalah – Prayer Times Kerala
 
 ## Short description (max 80)
 Accurate namaz times for Kerala with adhan, Qibla, adhkar and Ramadan timetable
 
 ## Full description (English)
-Kerala Prayer Times gives you accurate daily namaz times for all 14 districts of Kerala, calculated the Kerala way and matched to the published Kerala timetable.
+Basmalah gives you accurate daily namaz times for all 14 districts of Kerala, calculated the Kerala way and matched to the published Kerala timetable.
 
 ★ ACCURATE TIMES
 • Fajr, Sunrise, Dhuhr, Asr, Maghrib and Isha for every district headquarters
