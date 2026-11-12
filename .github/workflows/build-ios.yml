@@ -1,0 +1,58 @@
+name: Build iOS Simulator
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'www/**'
+      - 'scripts/**'
+      - 'assets/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'capacitor.config.json'
+      - '.github/workflows/build-ios.yml'
+
+jobs:
+  ios-simulator:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Show Xcode version
+        run: xcodebuild -version
+      - name: Install dependencies
+        run: npm install
+      - name: Prepare fonts
+        run: npm run fonts
+      - name: Prepare Adhan audio
+        run: npm run adhans
+      - name: Prepare Quran
+        run: npm run quran
+      - name: Prepare magnetic declination
+        run: npm run declination
+      - name: Add iOS platform
+        run: npx cap add ios
+      - name: Generate iOS icons and splash screens
+        run: npx @capacitor/assets generate --ios --iconBackgroundColor '#0A4D3A' --splashBackgroundColor '#0A4D3A' --splashBackgroundColorDark '#071A2C'
+      - name: Sync iOS
+        run: npx cap sync ios
+      - name: Build unsigned simulator app
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO build
+      - name: Package simulator app
+        run: |
+          cd "$RUNNER_TEMP/DerivedData/Build/Products/Debug-iphonesimulator"
+          zip -r "$GITHUB_WORKSPACE/Basmalah-iOS-Simulator.zip" App.app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Basmalah-iOS-Simulator
+          path: Basmalah-iOS-Simulator.zip
+          if-no-files-found: error
