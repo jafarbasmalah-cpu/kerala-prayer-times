@@ -1,63 +1,76 @@
-# Kerala Prayer Times – Android & iPhone app
+# Kerala Prayer Times – Android & iPhone app (v2.1)
 
-A professional, offline prayer-times app for Kerala, built once and shipped to both Android and iPhone (Capacitor 8).
+One code base (Capacitor 8) for Android and iPhone. Dark green and blue design, English and Malayalam.
 
 ## Features
 | | |
 |---|---|
-| **Main page** | First-launch district picker (all 14 districts) or exact GPS location; change any time from the district chip |
-| **Prayer times** | Fajr, **Sunrise**, Dhuhr, Asr, Maghrib, Isha – Kerala standard (18°/18°, Shafi'i), verified 30/30 against the published Kerala timetable |
-| **Next prayer** | Live countdown with progress ring; current prayer highlighted |
-| **Dates** | Yesterday / Today / **Tomorrow**, any date picker, full **month timetable** |
-| **Adhan** | Adhan at each prayer, per-prayer Adhan / Notification / Off, **multiple adhan sounds** with preview, separate Fajr adhan, reminder before prayer |
-| **Qibla** | Live compass with Kaaba marker, bearing and distance to Makkah, vibration when aligned |
-| **Adhkar & duas** | After-prayer adhkar for each prayer (Arabic, transliteration, meaning, source), tap counters |
-| **Other** | English / Malayalam, light / dark theme, 12/24h, Hijri date with ±2-day adjustment, ± minute adjustment per prayer |
+| **Prayer times** | All 14 districts or GPS, Fajr · Sunrise · Dhuhr · Asr · Maghrib · Isha, verified against the published Kerala timetable |
+| **Adhan** | Per prayer Adhan / Notification / Off, several adhan sounds, separate Fajr adhan, reminder before prayer |
+| **Adhan reliability check** | Checks notifications, exact alarms and battery settings, with tips per phone maker |
+| **Home screen widget** (Android) | Next prayer, live countdown and today's times, refreshes itself at every prayer |
+| **Qibla** | Compass starts automatically, bearing and distance to Makkah |
+| **Adhkar & Tasbih** | After-prayer adhkar (Arabic, transliteration, English and Malayalam meaning, source), tasbih counter 33/99/100/∞ |
+| **Ramadan** | Automatic in Ramadan: Suhoor/Iftar card with countdown, Suhoor reminder, Ramadan timetable |
+| **Hijri calendar** | Hijri month view, Islamic days (Nabidinam, Badr, Eid…), upcoming days on the home screen |
+| **Jumu'ah** | Friday reminder before Dhuhr |
+| **Timetables** | Day, month (share as image / print), Ramadan |
 
-## What you need
-* **Node.js 22** (https://nodejs.org) and **ffmpeg** (for adhan sounds)
-* **Android:** Android Studio (latest) – Windows, Mac or Linux
-* **iPhone:** a **Mac** with **Xcode 26+**. Installing on your own iPhone works with a free Apple ID (re-sign every 7 days); App Store needs an Apple Developer account.
+## Build the Android app on GitHub (no PC tools needed)
+1. Upload the **contents** of this folder to your GitHub repository (replace the old files, keep `.github`).
+2. **Actions › Build Android APK** runs by itself → open the run › **Summary** › **Artifacts** › `KeralaPrayerTimes-Android`.
+3. Unzip, copy `app-debug.apk` to the phone and install.
 
-## Build – step by step
+## Google Play release (signed)
+**One time only – create your signing key**
+1. GitHub › **Actions › Create signing key (run once) › Run workflow**. Type a strong password (write it down!) and your name.
+2. Open the finished run › download **signing-key-KEEP-SAFE**. Keep `release.jks` and the password safe forever – every future update must be signed with the same key. (The artifact is deleted after 1 day.)
+3. GitHub › **Settings › Secrets and variables › Actions › New repository secret**, add two secrets:
+   * `KEYSTORE_BASE64` – paste the whole content of `KEYSTORE_BASE64.txt`
+   * `KEYSTORE_PASSWORD` – the password you chose
+
+**Every release**
+4. Run **Build Android APK** again. It now also produces **KeralaPrayerTimes-PlayStore** with the `.aab` file for Google Play. The version number goes up automatically.
+5. Google Play Console ($25 one-time) › Create app › upload the `.aab` under *Testing › Internal testing* first, then *Production*.
+6. Store texts, graphics and data-safety answers are ready in the `store/` folder (`STORE_LISTING.md`). Put `store/privacy-policy.html` online (for example Google Sites, or a public GitHub repository with GitHub Pages) and paste its link in Play Console.
+
+> Before your first Play upload you may change `appId` in `capacitor.config.json` (for example `com.yourname.keralaprayertimes`). After the first upload it can never change.
+
+## iPhone
+Needs a Mac with Xcode 26+: `npm install`, `npx cap add ios`, `npm run assets`, `npm run fonts`, `npm run setup:native`, `npx cap sync`, `npx cap open ios`. The home screen widget is Android-only for now (iPhone widgets need a separate Xcode WidgetKit target).
+
+## Build on your own PC (optional)
 ```bash
-# 1. Install
 npm install
-
-# 2. Add the platforms
-npx cap add android
-npx cap add ios            # Mac only
-
-# 3. Icons & splash screens (from /assets)
+npm run fonts
+npx cap add android        # and/or: npx cap add ios  (Mac)
 npm run assets
-
-# 4. (Optional) add adhan MP3s to resources/adhan-source/  – see the txt file there
-
-# 5. Copy sounds + add permissions, then sync
 npm run setup:native
 npx cap sync
-
-# 6. Open and run
-npx cap open android       # Android Studio → Run ▶  or  Build → Build APK(s)
-npx cap open ios           # Xcode → choose your iPhone → Run ▶
+npx cap open android
 ```
-Re-run steps 5 whenever you change adhan files or app code.
 
-### No PC tools? Build the Android APK on GitHub
-Upload this folder to a GitHub repository → **Actions** tab → *Build Android APK* runs automatically → download **KeralaPrayerTimes-Android** from the run.
+## Adhan recordings
+The build downloads these freely licensed recordings from Wikimedia Commons (`npm run adhans`), then trims, levels and converts them:
 
-## Adhan notes
-* **Android** plays the full adhan as the notification sound. Each sound has its own notification channel, so changing the adhan in Settings takes effect immediately.
-* **iPhone** limits notification sounds to **30 seconds**, so the setup makes a 29-second clip. When the app is open, the full adhan plays in the app.
-* On Android 12+ the app asks for **exact alarms** so the adhan is on time – allow it when prompted.
-* Turn off battery optimisation for the app on phones that kill background apps (Xiaomi, Oppo, Vivo, Samsung).
+| In the app | Recording by | Licence | Source file on commons.wikimedia.org |
+|---|---|---|---|
+| Makkah – Masjid al-Haram | Seyfula Islam | CC BY 3.0 | Adhan, Great Mosque of Mecca - Jan 21, 2013.webm |
+| Madinah – Masjid an-Nabawi | ejaz215 | CC BY 3.0 | 33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg |
+| Aaqib Azeez – calm adhan | Atcovi | CC BY-SA 4.0 | The Adhan - Muslim Call to Prayer - Aaqib Azeez.mp3 |
+| Short adhan (27 s) | Jarih | CC BY-SA 3.0 | Adhan wiki.oga |
+| Fajr adhan – Besim Azemi | Islamic Center Malmö | CC BY 3.0 | Eid al-Fitr Fajr azan at Malmö Mosque - 19 August 2012.webm |
 
-## Accuracy
-Times use the Kerala standard (Karachi 18° Fajr & Isha, Shafi'i Asr, IST) for each district headquarters and matched the published Kerala (Suprabhatham-sourced) timetable to the minute for Kasaragod, Kozhikode, Malappuram, Kochi and Thiruvananthapuram. Use GPS for your exact location, and the ± minute adjustment to match your local masjid exactly.
+Credits are shown in the app (Settings › Credits & licences). Please check each file page on Wikimedia Commons before publishing on Google Play.
 
-## Adhkar
-The adhkar and duas are standard after-prayer adhkar with hadith/Qur'an references. Please have them reviewed by your local scholar (Usthad) before publishing.
+**Choosing adhans:** Settings › Adhan sound (all prayers), Fajr adhan sound, and under "Alert for each prayer" a different adhan for each prayer. The home page also has a quick "Change" adhan button.
 
-## Publishing
-* **Google Play:** Android Studio → Build → Generate Signed Bundle (AAB). Change `appId` in `capacitor.config.json` before your first release.
-* **App Store:** Xcode → Product → Archive → Distribute.
+**Your own adhans:** put any MP3 you have permission to use in `resources/adhan-source/` (e.g. `mishary.mp3`, `fajr_kerala.mp3`). It appears in the app automatically. A file named like a built-in one (e.g. `makkah.mp3`) replaces it.
+The build finds where the muezzin starts (skipping crowd noise or silence at the start), so the adhan begins straight away. iPhone limits notification sounds to 30 s, so a 29 s clip is made; the full adhan plays when the app is open.
+
+## Reliability notes
+* Android schedules 30 days of alerts, iPhone 14 days (iPhone allows only 64). Opening the app tops them up; a last reminder asks the user to open the app.
+* Battery savers on Samsung, Xiaomi, Oppo, Vivo, Realme and OnePlus can block alarms – the in-app **Adhan reliability check** guides the user.
+
+## Content
+Adhkar and Malayalam meanings should be reviewed by a local scholar (Usthad) before publishing. Hijri dates are calculated (Umm al-Qura); Kerala follows local moon sighting – users can shift the Hijri date ±2 days in Settings.

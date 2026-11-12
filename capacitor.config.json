@@ -2,12 +2,12 @@
   "appId": "com.kerala.prayertimes",
   "appName": "Kerala Prayer Times",
   "webDir": "www",
-  "backgroundColor": "#0B5D4B",
+  "backgroundColor": "#0A4D3A",
   "android": { "allowMixedContent": false },
   "ios": { "contentInset": "never" },
   "plugins": {
-    "SplashScreen": { "launchShowDuration": 1200, "backgroundColor": "#0B5D4B", "showSpinner": false, "launchAutoHide": true },
-    "LocalNotifications": { "smallIcon": "ic_stat_prayer", "iconColor": "#0B5D4B", "presentationOptions": ["badge", "banner", "list"] },
-    "StatusBar": { "style": "DARK", "backgroundColor": "#0B5D4B", "overlaysWebView": false }
+    "SplashScreen": { "launchShowDuration": 1200, "backgroundColor": "#0A4D3A", "showSpinner": false, "launchAutoHide": true },
+    "LocalNotifications": { "smallIcon": "ic_stat_prayer", "iconColor": "#0A4D3A", "presentationOptions": ["badge", "banner", "list"] },
+    "StatusBar": { "style": "DARK", "backgroundColor": "#0A4D3A", "overlaysWebView": false }
   }
 }

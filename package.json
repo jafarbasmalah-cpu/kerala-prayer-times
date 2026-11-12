@@ -1,25 +1,29 @@
 {
   "name": "kerala-prayer-times",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Kerala Prayer Times - accurate namaz times, adhan, Qibla and adhkar for Android and iPhone",
   "private": true,
   "scripts": {
     "setup:native": "node scripts/native-setup.mjs",
-    "assets": "npx @capacitor/assets generate --iconBackgroundColor '#0B5D4B' --iconBackgroundColorDark '#0B5D4B' --splashBackgroundColor '#0B5D4B' --splashBackgroundColorDark '#06261F'",
+    "assets": "npx @capacitor/assets generate --iconBackgroundColor '#0A4D3A' --iconBackgroundColorDark '#0A4D3A' --splashBackgroundColor '#0A4D3A' --splashBackgroundColorDark '#071A2C'",
     "sync": "npx cap sync",
     "android": "npx cap open android",
     "ios": "npx cap open ios",
-    "serve": "npx http-server www -p 8080 -c-1"
+    "serve": "npx http-server www -p 8080 -c-1",
+    "fonts": "node scripts/get-fonts.mjs",
+    "adhans": "node scripts/get-adhans.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.0",
     "@capacitor/app": "^8.0.0",
     "@capacitor/core": "^8.0.0",
+    "@capacitor/filesystem": "^8.0.0",
     "@capacitor/geolocation": "^8.0.0",
     "@capacitor/haptics": "^8.0.0",
     "@capacitor/ios": "^8.0.0",
     "@capacitor/local-notifications": "^8.0.0",
     "@capacitor/preferences": "^8.0.0",
+    "@capacitor/share": "^8.0.0",
     "@capacitor/splash-screen": "^8.0.0",
     "@capacitor/status-bar": "^8.0.0"
   },
