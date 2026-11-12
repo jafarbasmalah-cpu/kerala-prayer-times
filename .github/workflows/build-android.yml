@@ -5,6 +5,8 @@ on:
 jobs:
   android:
     runs-on: ubuntu-latest
+    env:
+      HAS_KEY: ${{ secrets.KEYSTORE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,14 +19,43 @@ jobs:
       - name: Install ffmpeg (prepares adhan sounds)
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: npm install
+      - name: Fonts (Malayalam & Arabic)
+        run: npm run fonts
+      - name: Adhan recordings (Wikimedia Commons, free licences)
+        run: npm run adhans
       - run: npx cap add android
       - name: App icon & splash
-        run: npx @capacitor/assets generate --android --iconBackgroundColor '#0B5D4B' --splashBackgroundColor '#0B5D4B' --splashBackgroundColorDark '#06261F'
-      - run: npm run setup:native
+        run: npx @capacitor/assets generate --android --iconBackgroundColor '#0A4D3A' --splashBackgroundColor '#0A4D3A' --splashBackgroundColorDark '#071A2C'
+      - name: Sounds, permissions, widget
+        run: npm run setup:native
       - run: npx cap sync android
-      - name: Build APK
+      - name: Build test APK
         run: cd android && chmod +x gradlew && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: KeralaPrayerTimes-Android
           path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      # ---- Google Play release (runs only after you add the signing-key secrets) ----
+      - name: Build signed release for Google Play
+        if: env.HAS_KEY == 'true'
+        env:
+          KS_B64: ${{ secrets.KEYSTORE_BASE64 }}
+          KS_PW: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          cd android
+          ./gradlew bundleRelease assembleRelease \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/release.jks" \
+            -Pandroid.injected.signing.store.password="$KS_PW" \
+            -Pandroid.injected.signing.key.alias=kpt \
+            -Pandroid.injected.signing.key.password="$KS_PW"
+      - uses: actions/upload-artifact@v4
+        if: env.HAS_KEY == 'true'
+        with:
+          name: KeralaPrayerTimes-PlayStore
+          path: |
+            android/app/build/outputs/bundle/release/*.aab
+            android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
